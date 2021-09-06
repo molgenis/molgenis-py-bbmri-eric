@@ -180,7 +180,7 @@ class EricSession(ExtendedSession):
         return QualityInfo(
              biobanks=bb_qual,
              collections=coll_qual
-         )
+        )
 
     def get_node(self, code: str) -> Node:
         """
