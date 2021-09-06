@@ -74,7 +74,6 @@ class Publisher:
 
         # Remove ids that we are not allowed to delete
         undeletable_ids = self.quality_info.get_qualities(table.type).keys()
-
         deletable_ids = deleted_ids.difference(undeletable_ids)
 
         # Actually delete the rows in the combined tables
