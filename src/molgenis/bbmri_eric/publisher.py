@@ -46,6 +46,7 @@ class Publisher:
         for table in node_data.import_order:
             self.printer.print(f"Upserting rows in {table.type.base_id}")
             try:
+                #print(table.rows)
                 self.session.upsert_batched(table.type.base_id, table.rows)
             except MolgenisRequestError as e:
                 raise EricError(f"Error upserting rows to {table.type.base_id}") from e
@@ -70,14 +71,24 @@ class Publisher:
         # Compare the ids from staging and production to see what was deleted
         staging_ids = {row["id"] for row in table.rows}
         production_ids = self._get_production_ids(table, node)
+        print('node', node)
+        print('table is', table.type.base_id)
+        print('aantal staging_ids', type(staging_ids), len(staging_ids))
+        print('aantal production_ids', type(production_ids), len(production_ids))
         deleted_ids = production_ids.difference(staging_ids)
 
+        print('deleted_list', deleted_ids)
         # Remove ids that we are not allowed to delete
         undeletable_ids = self.quality_info.get_qualities(table.type).keys()
+
+        print('aantal undeletable_ids', len(undeletable_ids))
+
         deletable_ids = deleted_ids.difference(undeletable_ids)
+        print('deletable_ids', deletable_ids)
 
         # Actually delete the rows in the combined tables
         if deletable_ids:
+            self.printer.print(f"Deleting {len(deletable_ids)} rows in {table.type.base_id}")
             self.session.delete_list(table.type.base_id, list(deletable_ids))
 
         # Show warning for every id that we prevented deletion of
@@ -99,4 +110,5 @@ class Publisher:
         except MolgenisRequestError as e:
             raise EricError(f"Error getting rows from {table.type.base_id}") from e
 
-        return {row["id"] for row in rows if row.get("national_node", "") == node.code}
+#        return {row["id"] for row in rows if row.get("national_node", "") == node.code}
+        return {row["id"] for row in rows if row.get("national_node", {}).get("id", "") == node.code}

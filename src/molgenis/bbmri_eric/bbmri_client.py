@@ -162,19 +162,25 @@ class EricSession(ExtendedSession):
         """
 
         biobank_qualities = self.get(
-            "eu_bbmri_eric_biobanks", batch_size=10000, attributes="id,quality"
+            "eu_bbmri_eric_bio_qual_info", batch_size=10000, attributes="id,biobank"
         )
         collection_qualities = self.get(
-            "eu_bbmri_eric_collections", batch_size=10000, attributes="id,quality"
+            "eu_bbmri_eric_col_qual_info", batch_size=10000, attributes="id,collection"
         )
+
 
         biobanks = utils.to_upload_format(biobank_qualities)
         collections = utils.to_upload_format(collection_qualities)
 
+        bb_qual={}
+        {bb_qual.setdefault(row["biobank"], []).append(row["id"]) for row in biobanks}
+        coll_qual={}
+        {coll_qual.setdefault(row["collection"], []).append(row["id"]) for row in collections}
+
         return QualityInfo(
-            biobanks={row["id"]: row["quality"] for row in biobanks},
-            collections={row["id"]: row["quality"] for row in collections},
-        )
+             biobanks=bb_qual,
+             collections=coll_qual
+         )
 
     def get_node(self, code: str) -> Node:
         """
