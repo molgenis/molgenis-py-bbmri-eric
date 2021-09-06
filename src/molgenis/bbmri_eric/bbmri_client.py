@@ -168,19 +168,18 @@ class EricSession(ExtendedSession):
             "eu_bbmri_eric_col_qual_info", batch_size=10000, attributes="id,collection"
         )
 
-
         biobanks = utils.to_upload_format(biobank_qualities)
         collections = utils.to_upload_format(collection_qualities)
 
-        bb_qual={}
+        bb_qual = {}
         {bb_qual.setdefault(row["biobank"], []).append(row["id"]) for row in biobanks}
-        coll_qual={}
-        {coll_qual.setdefault(row["collection"], []).append(row["id"]) for row in collections}
+        coll_qual = {}
+        {
+            coll_qual.setdefault(row["collection"], []).append(row["id"])
+            for row in collections
+        }
 
-        return QualityInfo(
-             biobanks=bb_qual,
-             collections=coll_qual
-        )
+        return QualityInfo(biobanks=bb_qual, collections=coll_qual)
 
     def get_node(self, code: str) -> Node:
         """

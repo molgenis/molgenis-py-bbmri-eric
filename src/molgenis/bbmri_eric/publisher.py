@@ -78,7 +78,9 @@ class Publisher:
 
         # Actually delete the rows in the combined tables
         if deletable_ids:
-            self.printer.print(f"Deleting {len(deletable_ids)} rows in {table.type.base_id}")
+            self.printer.print(
+                f"Deleting {len(deletable_ids)} rows in {table.type.base_id}"
+            )
             self.session.delete_list(table.type.base_id, list(deletable_ids))
 
         # Show warning for every id that we prevented deletion of
@@ -100,4 +102,8 @@ class Publisher:
         except MolgenisRequestError as e:
             raise EricError(f"Error getting rows from {table.type.base_id}") from e
 
-        return {row["id"] for row in rows if row.get("national_node", {}).get("id", "") == node.code}
+        return {
+            row["id"]
+            for row in rows
+            if row.get("national_node", {}).get("id", "") == node.code
+        }
