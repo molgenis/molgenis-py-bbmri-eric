@@ -45,7 +45,7 @@ def test_delete_rows(node_data: NodeData):
         {"id": "bbmri-eric:ID:NO_OUS", "national_node": {"id": "NO"}},
         {"id": "ignore_this_row", "national_node": {"id": "XX"}},
         {"id": "delete_this_row", "national_node": {"id": "NO"}},
-        {"id": "undeletable_id", "national_node": {"id": "NO"},
+        {"id": "undeletable_id", "national_node": {"id": "NO"}},
     ]
     session.get_quality_info = MagicMock()
     session.get_quality_info.return_value = q_info
