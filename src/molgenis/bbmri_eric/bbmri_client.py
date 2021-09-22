@@ -371,7 +371,7 @@ class ExternalServerSession(ExtendedSession):
     def get_node_data(self) -> NodeData:
         """
         Gets the four tables of this node's external server.
-        abcd
+
         :return: a NodeData object
         """
 
