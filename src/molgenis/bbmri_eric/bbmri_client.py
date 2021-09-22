@@ -32,6 +32,7 @@ class ReferenceAttributeNames:
     categoricals: List[str]
     categorical_mrefs: List[str]
     one_to_manys: List[str]
+    self_refs: List[str]
 
 
 class ReferenceType(Enum):
@@ -40,6 +41,7 @@ class ReferenceType(Enum):
     CATEGORICAL = "CATEGORICAL"
     CATEGORICAL_MREF = "CATEGORICAL_MREF"
     ONE_TO_MANY = "ONE_TO_MANY"
+    SELF_REFERENCE = "SELF_REFERENCE"
 
 
 class ExtendedSession(Session):
@@ -66,6 +68,8 @@ class ExtendedSession(Session):
             try:
                 type_ = ReferenceType[attr["fieldType"]]
                 result[type_].append(name)
+                if id_ in attr["refEntity"]["hrefCollection"]:
+                    result[ReferenceType.SELF_REFERENCE].append(name)
             except KeyError:
                 pass
 
@@ -75,6 +79,7 @@ class ExtendedSession(Session):
             categoricals=result.get(ReferenceType.CATEGORICAL, []),
             categorical_mrefs=result.get(ReferenceType.CATEGORICAL_MREF, []),
             one_to_manys=result.get(ReferenceType.ONE_TO_MANY, []),
+            self_refs=result.get(ReferenceType.SELF_REFERENCE, []),
         )
 
     def get_uploadable_data(self, entity_type_id: str, *args, **kwargs) -> List[dict]:
@@ -99,23 +104,68 @@ class ExtendedSession(Session):
         )
         existing_ids = {entity[id_attr] for entity in existing_entities}
 
+        ref_names = self.get_reference_attribute_names(entity_type_id)
+
         # Based on the existing identifiers, decide which rows should be added/updated
         add = list()
         update = list()
+        update_self_refs = defaultdict(list)
         for entity in entities:
+            # TODO Could possible even remove the self-referencing attributes
+            # from the row. This probably will also solve the issue with
+            # adding data in multiple batches.
+
             if entity[id_attr] in existing_ids:
                 update.append(entity)
             else:
                 add.append(entity)
+            # Create a list with self-referencing entities (excluding the one-to-manys
+            for attr in list(set(ref_names.self_refs) - set(ref_names.one_to_manys)):
+                try:
+                    update_self_refs[attr].append(
+                        {id_attr: entity[id_attr], attr: entity[attr]}
+                    )
+                except KeyError:
+                    pass
 
         # Do the adds and updates in batches
         self.add_batched(entity_type_id, add)
         self.update_batched(entity_type_id, update)
+        for attr in update_self_refs.keys():
+            self.update_one_attribute_batched(
+                entity_type_id, attr, update_self_refs[attr]
+            )
 
     def update(self, entity_type_id: str, entities: List[dict]):
         """Updates multiple entities."""
         response = self._session.put(
             self._api_url + "v2/" + quote_plus(entity_type_id),
+            headers=self._get_token_header_with_content_type(),
+            data=json.dumps({"entities": entities}),
+        )
+
+        try:
+            response.raise_for_status()
+        except requests.RequestException as ex:
+            self._raise_exception(ex)
+
+        return response
+
+    def update_one_attribute(
+        self, entity_type_id: str, attribute: str, entities: List[dict]
+    ):
+        """
+        Updates one attribute of multiple entities.
+        @param entity_type_id: the id of the entity type to update
+        @param attribute: the attribute to update
+        @param entities: the entities to update
+        """
+        response = self._session.put(
+            self._api_url
+            + "v2/"
+            + quote_plus(entity_type_id)
+            + "/"
+            + quote_plus(attribute),
             headers=self._get_token_header_with_content_type(),
             data=json.dumps({"entities": entities}),
         )
@@ -134,6 +184,14 @@ class ExtendedSession(Session):
         batches = list(batched(entities, 1000))
         for batch in batches:
             self.update(entity_type_id, batch)
+
+    def update_one_attribute_batched(
+        self, entity_type_id: str, attribute: str, entities: List[dict]
+    ):
+        """Updates one attribute of multiple entities in batches of 1000."""
+        batches = list(batched(entities, 1000))
+        for batch in batches:
+            self.update_one_attribute(entity_type_id, attribute, batch)
 
     def add_batched(self, entity_type_id: str, entities: List[dict]):
         """Adds multiple entities in batches of 1000."""
