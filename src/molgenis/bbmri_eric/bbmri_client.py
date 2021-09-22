@@ -111,7 +111,7 @@ class ExtendedSession(Session):
         update = list()
         update_self_refs = defaultdict(list)
         for entity in entities:
-            # TODO Could possible even remove the self-referencing attributes
+            # TODO Could probably even remove the self-referencing attributes
             # from the row. This probably will also solve the issue with
             # adding data in multiple batches.
 
