@@ -229,13 +229,12 @@ class EricSession(ExtendedSession):
         biobanks = utils.to_upload_format(biobank_qualities)
         collections = utils.to_upload_format(collection_qualities)
 
-        bb_qual = {}
-        {bb_qual.setdefault(row["biobank"], []).append(row["id"]) for row in biobanks}
-        coll_qual = {}
-        {
-            coll_qual.setdefault(row["collection"], []).append(row["id"])
-            for row in collections
-        }
+        bb_qual = defaultdict(list)
+        coll_qual = defaultdict(list)
+        for row in biobanks:
+            bb_qual[row["biobank"]].append(row["id"])
+        for row in collections:
+            coll_qual[row["collection"]].append(row["id"])
 
         return QualityInfo(biobanks=bb_qual, collections=coll_qual)
 
