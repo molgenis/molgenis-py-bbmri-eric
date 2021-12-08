@@ -1,4 +1,7 @@
-from typing import List
+from typing import List, Optional
+
+from pyhandle.clientcredentials import PIDClientCredentials
+from pyhandle.handleclient import PyHandleClient
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.errors import EricError, ErrorReport, requests_error_handler
@@ -20,7 +23,20 @@ class Eric:
         :param BbmriSession session: an authenticated session with an ERIC directory
         """
         self.session = session
+        self.handle_client: Optional[PyHandleClient] = None
         self.printer = Printer()
+
+    def configure_handle_client(self, credentials_json: str):
+        """
+        Configures a PyHandleClient based on the credentials JSON file.
+
+        :param credentials_json: an absolute path to the credentials file for PyHandle
+        :return: a PyHandleClient
+        """
+        credentials = PIDClientCredentials.load_from_JSON(credentials_json)
+        self.handle_client = PyHandleClient("rest").instantiate_with_credentials(
+            credentials
+        )
 
     def stage_external_nodes(self, nodes: List[ExternalServerNode]) -> ErrorReport:
         """
