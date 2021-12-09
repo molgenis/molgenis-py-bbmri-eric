@@ -11,12 +11,12 @@ from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.eric import Eric
 
 # get credentials from .env.local
-config = dotenv_values(".env.local")
+config = dotenv_values(".env")
 target = config["TARGET"]
 username = config["USERNAME"]
 password = config["PASSWORD"]
 
-# get staging data of node NL
+# login to the directory with an EricSession
 session = EricSession(url=target)
 session.login(username, password)
 
