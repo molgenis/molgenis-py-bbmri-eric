@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from typing import List, Optional
+from typing import Dict, List, Optional
 from urllib.parse import quote_plus
 
 import requests
@@ -146,6 +146,16 @@ class EricSession(ExtendedSession):
             coll_qual[row["collection"]].append(row["id"])
 
         return QualityInfo(biobanks=bb_qual, collections=coll_qual)
+
+    def get_biobank_pids(self) -> Dict[str, str]:
+        """
+        Retrieves the PIDs of published biobanks
+        :return: a dictionary with id/pid as key/value
+        """
+        rows = self.get(
+            TableType.BIOBANKS.base_id, batch_size=10000, attributes="id,pid"
+        )
+        return {row["id"]: row["pid"] for row in rows}
 
     def get_node(self, code: str) -> Node:
         """
