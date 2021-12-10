@@ -30,10 +30,9 @@ Follow these steps:
 """
 
 from dotenv import dotenv_values
-from pyhandle.clientcredentials import PIDClientCredentials
-from pyhandle.handleclient import PyHandleClient
 
 from molgenis.bbmri_eric.bbmri_client import ExtendedSession
+from molgenis.bbmri_eric.pid_service import PidService
 
 table = "eu_bbmri_eric_biobanks"
 
@@ -46,8 +45,7 @@ session = ExtendedSession(url=target)
 session.login(username, password)
 
 print("Creating handle client")
-credentials = PIDClientCredentials.load_from_JSON("pyhandle_creds.json")
-pid_client = PyHandleClient("rest").instantiate_with_credentials(credentials)
+pid_service = PidService.from_credentials("pyhandle_creds.json")
 
 print("Getting data from the directory")
 biobanks = session.get_uploadable_data(table)
@@ -59,9 +57,7 @@ for biobank in biobanks:
         continue
 
     url = url_prefix + biobank["id"]
-    pid = pid_client.generate_and_register_handle(
-        prefix=credentials.get_prefix(), location=url, NAME=biobank["name"]
-    )
+    pid = pid_service.register_pid(url=url, name=biobank["name"])
     biobank["pid"] = pid
     print(f"Generated {pid} for {biobank['id']}")
 

@@ -1,11 +1,9 @@
 from typing import List, Optional
 
-from pyhandle.clientcredentials import PIDClientCredentials
-from pyhandle.handleclient import PyHandleClient
-
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.errors import EricError, ErrorReport, requests_error_handler
 from molgenis.bbmri_eric.model import ExternalServerNode, Node, NodeData
+from molgenis.bbmri_eric.pid_service import PidService
 from molgenis.bbmri_eric.printer import Printer
 from molgenis.bbmri_eric.publisher import Publisher
 from molgenis.bbmri_eric.stager import Stager
@@ -18,25 +16,13 @@ class Eric:
     Main class for doing operations on the ERIC directory.
     """
 
-    def __init__(self, session: EricSession):
+    def __init__(self, session: EricSession, pid_service: Optional[PidService] = None):
         """
         :param BbmriSession session: an authenticated session with an ERIC directory
         """
         self.session = session
-        self.handle_client: Optional[PyHandleClient] = None
         self.printer = Printer()
-
-    def configure_handle_client(self, credentials_json: str):
-        """
-        Configures a PyHandleClient based on the credentials JSON file.
-
-        :param credentials_json: an absolute path to the credentials file for PyHandle
-        :return: a PyHandleClient
-        """
-        credentials = PIDClientCredentials.load_from_JSON(credentials_json)
-        self.handle_client = PyHandleClient("rest").instantiate_with_credentials(
-            credentials
-        )
+        self.pid_service: Optional[PidService] = pid_service
 
     def stage_external_nodes(self, nodes: List[ExternalServerNode]) -> ErrorReport:
         """
@@ -65,8 +51,11 @@ class Eric:
         Parameters:
             nodes (List[Node]): The list of nodes to publish
         """
+        if not self.pid_service:
+            raise ValueError("A PID service is required to publish nodes")
+
         report = ErrorReport(nodes)
-        publisher = Publisher(self.session, self.printer)
+        publisher = Publisher(self.session, self.printer, self.pid_service)
         for node in nodes:
             self.printer.print_node_title(node)
             try:
