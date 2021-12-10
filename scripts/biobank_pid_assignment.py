@@ -23,10 +23,10 @@ See https://eudat-b2handle.github.io/PYHANDLE/pyhandleclientrest.html#authentica
 -using-client-certificates for more information.
 
 Follow these steps:
-1. Add an attribute "pid" to the table
+1. Add a string attribute "pid" to the eu_bbmri_eric_biobanks table
 2. Make the attribute "nullable"
 3. Run the script
-4. Make the "pid" attribute "required" (not nullable) and "readOnly"
+4. Change the "pid" attribute from "nullable" to "required" and "readOnly"
 """
 
 from dotenv import dotenv_values
