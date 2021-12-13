@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
-from molgenis.bbmri_eric.errors import EricError, ErrorReport, requests_error_handler
+from molgenis.bbmri_eric.errors import EricError, ErrorReport, global_error_handler
 from molgenis.bbmri_eric.model import ExternalServerNode, Node, NodeData
 from molgenis.bbmri_eric.pid_service import PidService
 from molgenis.bbmri_eric.printer import Printer
@@ -67,7 +67,7 @@ class Eric:
         self.printer.print_summary(report)
         return report
 
-    @requests_error_handler
+    @global_error_handler
     def _publish_node(self, node: Node, report: ErrorReport, publisher: Publisher):
         # Stage the data if this node has an external server
         if isinstance(node, ExternalServerNode):
@@ -82,7 +82,7 @@ class Eric:
         # Copy the data from staging to the combined tables
         self._publish_node_data(node_data, publisher, report)
 
-    @requests_error_handler
+    @global_error_handler
     def _stage_node(self, node: ExternalServerNode):
         self.printer.print_sub_header(f"📥 Staging data of node {node.code}")
         self.printer.indent()

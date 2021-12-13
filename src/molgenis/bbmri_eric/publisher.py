@@ -1,9 +1,10 @@
-from typing import List, Set
+from typing import Dict, List, Set
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.enricher import Enricher
 from molgenis.bbmri_eric.errors import EricError, EricWarning
 from molgenis.bbmri_eric.model import Node, NodeData, QualityInfo, Table
+from molgenis.bbmri_eric.pid_service import PidService
 from molgenis.bbmri_eric.printer import Printer
 from molgenis.client import MolgenisRequestError
 
@@ -14,11 +15,13 @@ class Publisher:
     public tables.
     """
 
-    def __init__(self, session: EricSession, printer: Printer):
+    def __init__(self, session: EricSession, printer: Printer, pid_service: PidService):
         self.session = session
         self.printer = printer
+        self.pid_service = pid_service
         self.warnings: List[EricWarning] = []
         self.quality_info: QualityInfo = session.get_quality_info()
+        self.biobank_pids: Dict[str, str] = session.get_biobank_pids()
 
     def publish(self, node_data: NodeData) -> List[EricWarning]:
         """
@@ -28,7 +31,14 @@ class Publisher:
         self.warnings = []
         self.printer.print(f"✏️ Enriching data of node {node_data.node.code}")
         self.printer.indent()
-        Enricher(node_data, self.quality_info, self.printer).enrich()
+        Enricher(
+            node_data,
+            self.quality_info,
+            self.printer,
+            self.pid_service,
+            self.biobank_pids,
+            self.session.url,
+        ).enrich()
         self.printer.dedent()
 
         self.printer.print(f"✉️ Copying data of node {node_data.node.code}")
