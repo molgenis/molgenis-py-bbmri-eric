@@ -33,7 +33,7 @@ class Publisher:
         self.warnings = []
         self.printer.print(f"✏️ Enriching data of node {node_data.node.code}")
         self.printer.indent()
-        Enricher(
+        self.warnings += Enricher(
             node_data,
             self.quality_info,
             self.printer,
@@ -93,7 +93,7 @@ class Publisher:
             if id_ in existing_biobanks:
                 if name != existing_biobanks[id_]["name"]:
                     pid = biobank["pid"]
-                    self.pid_service.update_name(pid, name)
+                    self.pid_service.set_name(pid, name)
                     self.printer.print(f'Updated NAME of {pid} to "{name}"')
         self.printer.dedent()
 

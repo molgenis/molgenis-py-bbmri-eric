@@ -99,9 +99,9 @@ class PidService:
         )
 
     @pyhandle_error_handler
-    def update_name(self, pid: str, new_name: str):
+    def set_name(self, pid: str, new_name: str):
         """
-        Updates the NAME field of an existing PID.
+        Sets the NAME field of an existing PID. Adds the field if it doesn't exist.
 
         :param pid: the PID to change the NAME of
         :param new_name: the new value for the NAME field
@@ -110,5 +110,10 @@ class PidService:
 
     @pyhandle_error_handler
     def set_status(self, pid: str, status: Status):
-        # TODO implement
-        pass
+        """
+        Sets the STATUS field of an existing PID. Adds the field if it doesn't exist.
+
+        :param pid: the PID to change the STATUS of
+        :param status: a Status enum
+        """
+        self.client.modify_handle_value(pid, STATUS=status.value)
