@@ -1,9 +1,9 @@
-from typing import Dict, List, Set
+from typing import List, Set
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.enricher import Enricher
 from molgenis.bbmri_eric.errors import EricError, EricWarning
-from molgenis.bbmri_eric.model import Node, NodeData, QualityInfo, Table
+from molgenis.bbmri_eric.model import Node, NodeData, QualityInfo, Table, TableType
 from molgenis.bbmri_eric.pid_service import PidService
 from molgenis.bbmri_eric.printer import Printer
 from molgenis.client import MolgenisRequestError
@@ -21,7 +21,9 @@ class Publisher:
         self.pid_service = pid_service
         self.warnings: List[EricWarning] = []
         self.quality_info: QualityInfo = session.get_quality_info()
-        self.biobank_pids: Dict[str, str] = session.get_biobank_pids()
+        self.existing_biobanks: Table = session.get_published_biobanks(
+            ["id", "pid", "name", "national_node"]
+        )
 
     def publish(self, node_data: NodeData) -> List[EricWarning]:
         """
@@ -36,7 +38,7 @@ class Publisher:
             self.quality_info,
             self.printer,
             self.pid_service,
-            self.biobank_pids,
+            self.existing_biobanks,
             self.session.url,
         ).enrich()
         self.printer.dedent()
@@ -56,7 +58,7 @@ class Publisher:
         for table in node_data.import_order:
             self.printer.print(f"Upserting rows in {table.type.base_id}")
             try:
-                self.session.upsert_batched(table.type.base_id, table.rows)
+                self._upsert_rows(table)
             except MolgenisRequestError as e:
                 raise EricError(f"Error upserting rows to {table.type.base_id}") from e
 
@@ -66,6 +68,33 @@ class Publisher:
                 self._delete_rows(table, node_data.node)
             except MolgenisRequestError as e:
                 raise EricError(f"Error deleting rows from {table.type.base_id}") from e
+        self.printer.dedent()
+
+    def _upsert_rows(self, table: Table):
+        """
+        Upserts rows from a staging's table to the published table. For biobanks, checks
+        if its handle values need to be updated.
+        """
+        if table.type == TableType.BIOBANKS:
+            self._update_biobank_handles(table)
+
+        self.session.upsert_batched(table.type.base_id, table.rows)
+
+    def _update_biobank_handles(self, biobanks_table: Table):
+        """
+        Updates the handle of an existing biobank if the name of the biobank was
+        changed.
+        """
+        self.printer.indent()
+        existing_biobanks = self.existing_biobanks.rows_by_id
+        for biobank in biobanks_table.rows:
+            id_ = biobank["id"]
+            name = biobank["name"]
+            if id_ in existing_biobanks:
+                if name != existing_biobanks[id_]["name"]:
+                    pid = biobank["pid"]
+                    self.pid_service.update_name(pid, name)
+                    self.printer.print(f'Updated NAME of {pid} to "{name}"')
         self.printer.dedent()
 
     def _delete_rows(self, table: Table, node: Node):
