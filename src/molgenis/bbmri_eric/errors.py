@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import DefaultDict, List
 
 import requests
-from pyhandle.handleexceptions import HandleAuthenticationError
 
 from molgenis.bbmri_eric.model import Node
 
@@ -54,9 +53,9 @@ class ErrorReport:
         return len(self.warnings) > 0
 
 
-def global_error_handler(func):
+def requests_error_handler(func):
     """
-    Decorator that catches exceptions globally and wraps them in an EricError.
+    Decorator that catches RequestExceptions and wraps them in an EricError.
     """
 
     def inner_function(*args, **kwargs):
@@ -64,7 +63,5 @@ def global_error_handler(func):
             return func(*args, **kwargs)
         except requests.exceptions.RequestException as e:
             raise EricError("Request failed") from e
-        except HandleAuthenticationError as e:
-            raise EricError("Handle authentication failed") from e
 
     return inner_function

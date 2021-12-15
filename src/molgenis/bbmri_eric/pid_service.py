@@ -5,6 +5,11 @@ from urllib.parse import quote
 from pyhandle.client.resthandleclient import RESTHandleClient
 from pyhandle.clientcredentials import PIDClientCredentials
 from pyhandle.handleclient import PyHandleClient
+from pyhandle.handleexceptions import (
+    HandleAuthenticationError,
+    HandleNotFoundException,
+    HandleSyntaxError,
+)
 
 from molgenis.bbmri_eric.errors import EricError
 
@@ -12,6 +17,24 @@ from molgenis.bbmri_eric.errors import EricError
 class Status(Enum):
     TERMINATED = "TERMINATED"
     MERGED = "MERGED"
+
+
+def pyhandle_error_handler(func):
+    """
+    Decorator that catches PyHandleExceptions and wraps them in an EricError.
+    """
+
+    def inner_function(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except HandleAuthenticationError as e:
+            raise EricError("Handle authentication failed") from e
+        except HandleNotFoundException as e:
+            raise EricError(f"Handle not found on handle server: {e.handle}")
+        except HandleSyntaxError as e:
+            raise EricError(f"Handle has incorrect syntax: {e.handle}")
+
+    return inner_function
 
 
 class PidService:
@@ -45,6 +68,7 @@ class PidService:
             credentials.get_prefix(),
         )
 
+    @pyhandle_error_handler
     def reverse_lookup(self, url: str) -> Optional[List[str]]:
         """
         Looks for handles with this url.
@@ -56,14 +80,16 @@ class PidService:
         url = quote(url)
         pids = self.client.search_handle(URL=url, prefix=self.prefix)
 
-        if not pids:
+        if pids is None:
             raise EricError("Insufficient permissions for reverse lookup")
 
         return pids
 
+    @pyhandle_error_handler
     def register_pid(self, url: str, name: str) -> str:
         """
         Generates a new PID and registers it with a URL and a NAME field.
+
         :param url: the URL for the handle
         :param name: the NAME for the handle
         :return: the generated PID
@@ -72,10 +98,17 @@ class PidService:
             prefix=self.prefix, location=url, NAME=name
         )
 
+    @pyhandle_error_handler
     def update_name(self, pid: str, new_name: str):
-        # TODO implement
-        pass
+        """
+        Updates the NAME field of an existing PID.
 
+        :param pid: the PID to change the NAME of
+        :param new_name: the new value for the NAME field
+        """
+        self.client.modify_handle_value(pid, NAME=new_name)
+
+    @pyhandle_error_handler
     def set_status(self, pid: str, status: Status):
         # TODO implement
         pass
