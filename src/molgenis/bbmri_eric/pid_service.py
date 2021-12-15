@@ -38,6 +38,10 @@ def pyhandle_error_handler(func):
 
 
 class PidService:
+    """
+    Low level service for interacting with the handle server.
+    """
+
     def __init__(self, client: RESTHandleClient, prefix: str):
         self.client = client
         self.prefix = prefix

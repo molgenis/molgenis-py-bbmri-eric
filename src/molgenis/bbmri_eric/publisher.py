@@ -3,7 +3,8 @@ from typing import List, Set
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.enricher import Enricher
 from molgenis.bbmri_eric.errors import EricError, EricWarning
-from molgenis.bbmri_eric.model import Node, NodeData, QualityInfo, Table, TableType
+from molgenis.bbmri_eric.model import Node, NodeData, QualityInfo, Table
+from molgenis.bbmri_eric.pid_manager import PidManager
 from molgenis.bbmri_eric.pid_service import PidService
 from molgenis.bbmri_eric.printer import Printer
 from molgenis.client import MolgenisRequestError
@@ -19,6 +20,7 @@ class Publisher:
         self.session = session
         self.printer = printer
         self.pid_service = pid_service
+        self.pid_manager = PidManager(pid_service, printer, session.url)
         self.warnings: List[EricWarning] = []
         self.quality_info: QualityInfo = session.get_quality_info()
         self.existing_biobanks: Table = session.get_published_biobanks(
@@ -33,14 +35,14 @@ class Publisher:
         self.warnings = []
         self.printer.print(f"✏️ Enriching data of node {node_data.node.code}")
         self.printer.indent()
+
         self.warnings += Enricher(
-            node_data,
-            self.quality_info,
-            self.printer,
-            self.pid_service,
-            self.existing_biobanks,
-            self.session.url,
+            node_data, self.quality_info, self.printer, self.existing_biobanks
         ).enrich()
+        self.warnings += self.pid_manager.assign_and_update_biobank_pids(
+            node_data.biobanks, self.existing_biobanks
+        )
+
         self.printer.dedent()
 
         self.printer.print(f"✉️ Copying data of node {node_data.node.code}")
@@ -58,7 +60,7 @@ class Publisher:
         for table in node_data.import_order:
             self.printer.print(f"Upserting rows in {table.type.base_id}")
             try:
-                self._upsert_rows(table)
+                self.session.upsert_batched(table.type.base_id, table.rows)
             except MolgenisRequestError as e:
                 raise EricError(f"Error upserting rows to {table.type.base_id}") from e
 
@@ -68,33 +70,6 @@ class Publisher:
                 self._delete_rows(table, node_data.node)
             except MolgenisRequestError as e:
                 raise EricError(f"Error deleting rows from {table.type.base_id}") from e
-        self.printer.dedent()
-
-    def _upsert_rows(self, table: Table):
-        """
-        Upserts rows from a staging's table to the published table. For biobanks, checks
-        if its handle values need to be updated.
-        """
-        if table.type == TableType.BIOBANKS:
-            self._update_biobank_handles(table)
-
-        self.session.upsert_batched(table.type.base_id, table.rows)
-
-    def _update_biobank_handles(self, biobanks_table: Table):
-        """
-        Updates the handle of an existing biobank if the name of the biobank was
-        changed.
-        """
-        self.printer.indent()
-        existing_biobanks = self.existing_biobanks.rows_by_id
-        for biobank in biobanks_table.rows:
-            id_ = biobank["id"]
-            name = biobank["name"]
-            if id_ in existing_biobanks:
-                if name != existing_biobanks[id_]["name"]:
-                    pid = biobank["pid"]
-                    self.pid_service.set_name(pid, name)
-                    self.printer.print(f'Updated NAME of {pid} to "{name}"')
         self.printer.dedent()
 
     def _delete_rows(self, table: Table, node: Node):

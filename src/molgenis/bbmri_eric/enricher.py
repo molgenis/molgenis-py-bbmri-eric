@@ -1,8 +1,4 @@
-from typing import List
-
-from molgenis.bbmri_eric.errors import EricWarning
 from molgenis.bbmri_eric.model import NodeData, QualityInfo, Table
-from molgenis.bbmri_eric.pid_service import PidService
 from molgenis.bbmri_eric.printer import Printer
 
 
@@ -18,20 +14,14 @@ class Enricher:
         node_data: NodeData,
         quality: QualityInfo,
         printer: Printer,
-        pid_service: PidService,
         existing_biobanks: Table,
-        url: str,
     ):
         self.node_data = node_data
         self.quality = quality
         self.printer = printer
-        self.pid_service = pid_service
         self.existing_biobank_pids = existing_biobanks.rows_by_id
-        self.url = url
-        self.biobank_url_prefix = url.rstrip("/") + "/#/biobank/"
-        self.warnings: List[EricWarning] = []
 
-    def enrich(self) -> List[EricWarning]:
+    def enrich(self):
         """
         Enriches the data of a node:
         1. Sets the commercial use boolean
@@ -43,7 +33,6 @@ class Enricher:
         self._set_national_node_code()
         self._set_quality_info()
         self._set_biobank_pids()
-        return self.warnings
 
     def _set_commercial_use_bool(self):
         """
@@ -92,40 +81,10 @@ class Enricher:
 
     def _set_biobank_pids(self):
         """
-        Adds PIDs to the biobanks. For existing biobanks, the PIDs from
-        eu_bbmri_eric_biobanks are used. For new biobanks, new PIDs are registered.
+        Adds the PIDs for existing biobanks.
         """
         self.printer.print("Adding PIDs to biobanks")
-        self.printer.indent()
-
         for biobank in self.node_data.biobanks.rows:
             biobank_id = biobank["id"]
             if biobank_id in self.existing_biobank_pids:
-                pid = self.existing_biobank_pids[biobank_id]["pid"]
-            else:
-                pid = self._register_pid(biobank_id, biobank["name"])
-
-            biobank["pid"] = pid
-
-        self.printer.dedent()
-
-    def _register_pid(self, biobank_id: str, biobank_name: str) -> str:
-        """
-        Registers a PID for a new biobank. If one or more PIDs for this biobank already
-        exist, warnings will be shown.
-        """
-        url = self.biobank_url_prefix + biobank_id
-        existing_pids = self.pid_service.reverse_lookup(url)
-
-        if existing_pids:
-            pid = existing_pids[0]
-            warning = EricWarning(
-                f"One or more PIDs already exist for {url}: {str(existing_pids)}"
-            )
-            self.printer.print_warning(warning)
-            self.warnings.append(warning)
-        else:
-            pid = self.pid_service.register_pid(url=url, name=biobank_name)
-            self.printer.print(f'Registered {pid} for new biobank "{biobank_name}"')
-
-        return pid
+                biobank["pid"] = self.existing_biobank_pids[biobank_id]["pid"]
