@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import List
 
 from molgenis.bbmri_eric.errors import EricWarning
 from molgenis.bbmri_eric.model import NodeData, QualityInfo, Table
@@ -19,14 +19,14 @@ class Enricher:
         quality: QualityInfo,
         printer: Printer,
         pid_service: PidService,
-        biobank_pids: Dict[str, str],
+        existing_biobanks: Table,
         url: str,
     ):
         self.node_data = node_data
         self.quality = quality
         self.printer = printer
         self.pid_service = pid_service
-        self.existing_biobank_pids = biobank_pids
+        self.existing_biobank_pids = existing_biobanks.rows_by_id
         self.url = url
         self.biobank_url_prefix = url.rstrip("/") + "/#/biobank/"
         self.warnings: List[EricWarning] = []
@@ -101,7 +101,7 @@ class Enricher:
         for biobank in self.node_data.biobanks.rows:
             biobank_id = biobank["id"]
             if biobank_id in self.existing_biobank_pids:
-                pid = self.existing_biobank_pids[biobank_id]
+                pid = self.existing_biobank_pids[biobank_id]["pid"]
             else:
                 pid = self._register_pid(biobank_id, biobank["name"])
 
@@ -125,7 +125,7 @@ class Enricher:
             self.printer.print_warning(warning)
             self.warnings.append(warning)
         else:
-            pid = self.pid_service.register_pid(url=url, name=biobank_id)
+            pid = self.pid_service.register_pid(url=url, name=biobank_name)
             self.printer.print(f'Registered {pid} for new biobank "{biobank_name}"')
 
         return pid
