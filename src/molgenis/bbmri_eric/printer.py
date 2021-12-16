@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from molgenis.bbmri_eric.errors import EricError, EricWarning, ErrorReport
 from molgenis.bbmri_eric.model import Node
 
@@ -20,11 +22,13 @@ class Printer:
     def reset_indent(self):
         self.indents = 0
 
-    def print(self, value: str = None):
+    def print(self, value: str = None, indent: int = 0):
+        self.indents += indent
         if value:
             print(f"{'    ' * self.indents}{value}")
         else:
             print()
+        self.indents -= indent
 
     def print_node_title(self, node: Node):
         title = f"🌍 Node {node.code} ({node.description})"
@@ -68,3 +72,9 @@ class Printer:
             else:
                 message = f"✅ Node {node.code} finished successfully"
             self.print(message)
+
+    @contextmanager
+    def indentation(self):
+        self.indent()
+        yield
+        self.dedent()
