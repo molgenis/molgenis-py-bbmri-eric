@@ -34,7 +34,7 @@ class Publisher:
         """
         self.warnings = []
 
-        self.printer.print(f"✏️ Enriching data of node {node_data.node.code}")
+        self.printer.print(f"✏️ Preparing data of node {node_data.node.code}")
         with self.printer.indentation():
             Enricher(
                 node_data, self.quality_info, self.printer, self.existing_biobanks
@@ -69,7 +69,8 @@ class Publisher:
         for table in reversed(node_data.import_order):
             self.printer.print(f"Deleting rows in {table.type.base_id}")
             try:
-                self._delete_rows(table, node_data.node)
+                with self.printer.indentation():
+                    self._delete_rows(table, node_data.node)
             except MolgenisRequestError as e:
                 raise EricError(f"Error deleting rows from {table.type.base_id}") from e
 
@@ -93,16 +94,14 @@ class Publisher:
 
         # For deleted biobanks, update the handle
         if table.type == TableType.BIOBANKS:
-            with self.printer.indentation():
-                self.pid_manager.terminate_biobanks(
-                    [self.existing_biobanks.rows_by_id[id_] for id_ in deletable_ids]
-                )
+            self.pid_manager.terminate_biobanks(
+                [self.existing_biobanks.rows_by_id[id_] for id_ in deletable_ids]
+            )
 
         # Actually delete the rows in the combined tables
         if deletable_ids:
             self.printer.print(
-                f"Deleting {len(deletable_ids)} row(s) in {table.type.base_id}",
-                indent=1,
+                f"Deleting {len(deletable_ids)} row(s) in {table.type.base_id}"
             )
             self.session.delete_list(table.type.base_id, list(deletable_ids))
 

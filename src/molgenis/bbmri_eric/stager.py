@@ -26,7 +26,8 @@ class Stager:
         self.printer.print(
             f"📩 Importing data from {node.url} to staging area of {node.code}"
         )
-        self._import_node(node)
+        with self.printer.indentation():
+            self._import_node(node)
 
     def _clear_staging_area(self, node: ExternalServerNode):
         """
@@ -42,8 +43,6 @@ class Stager:
         """
         Copies the data from the external server to the staging area.
         """
-        self.printer.indent()
-
         try:
             source_session = ExternalServerSession(node=node)
             source_data = source_session.get_node_data()
@@ -60,5 +59,3 @@ class Stager:
                 )
         except MolgenisRequestError as e:
             raise EricError(f"Error copying from {node.url} to staging area") from e
-
-        self.printer.dedent()

@@ -85,34 +85,25 @@ class Eric:
     @requests_error_handler
     def _stage_node(self, node: ExternalServerNode):
         self.printer.print_sub_header(f"📥 Staging data of node {node.code}")
-        self.printer.indent()
-
-        Stager(self.session, self.printer).stage(node)
-
-        self.printer.dedent()
+        with self.printer.indentation():
+            Stager(self.session, self.printer).stage(node)
 
     def _publish_node_data(
         self, node_data: NodeData, publisher: Publisher, report: ErrorReport
     ):
         self.printer.print_sub_header(f"📤 Publishing node {node_data.node.code}")
-        self.printer.indent()
-
-        warnings = publisher.publish(node_data)
-        report.add_warnings(node_data.node, warnings)
-
-        self.printer.dedent()
+        with self.printer.indentation():
+            warnings = publisher.publish(node_data)
+            report.add_warnings(node_data.node, warnings)
 
     def _validate_node(self, node_data: NodeData, report: ErrorReport):
         self.printer.print_sub_header(
             f"🔎 Validating staging data of node {node_data.node.code}"
         )
-        self.printer.indent()
-
-        warnings = Validator(node_data, self.printer).validate()
-        if warnings:
-            report.add_warnings(node_data.node, warnings)
-
-        self.printer.dedent()
+        with self.printer.indentation():
+            warnings = Validator(node_data, self.printer).validate()
+            if warnings:
+                report.add_warnings(node_data.node, warnings)
 
     def _get_node_data(self, node: Node) -> NodeData:
         try:
