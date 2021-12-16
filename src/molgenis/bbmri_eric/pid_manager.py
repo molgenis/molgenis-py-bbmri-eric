@@ -7,12 +7,21 @@ from molgenis.bbmri_eric.printer import Printer
 
 
 class PidManager:
+    """
+    This class is responsible for managing PIDs of BBMRI-ERIC entities: assignment,
+    updates en status changes are done here.
+    """
+
     def __init__(self, pid_service: PidService, printer: Printer, url: str):
         self.pid_service = pid_service
         self.printer = printer
         self.biobank_url_prefix = url.rstrip("/") + "/#/biobank/"
 
     def assign_biobank_pids(self, biobanks: Table) -> List[EricWarning]:
+        """
+        Registers and assigns a new PID for biobanks that have an empty "pid" attribute.
+        Make sure to enrich the table with existing PIDs before using this method.
+        """
         warnings = []
         for biobank in biobanks.rows:
             if "pid" not in biobank:
@@ -23,6 +32,9 @@ class PidManager:
         return warnings
 
     def update_biobank_pids(self, biobanks: Table, existing_biobanks: Table):
+        """
+        Detects changes in biobanks and updates their PIDs accordingly.
+        """
         existing_biobanks = existing_biobanks.rows_by_id
         for biobank in biobanks.rows:
             id_ = biobank["id"]
@@ -31,6 +43,9 @@ class PidManager:
                     self._update_biobank_name(biobank["pid"], biobank["name"])
 
     def terminate_biobanks(self, biobanks: List[dict]):
+        """
+        Sets the STATUS of a PID to TERMINATED.
+        """
         for biobank in biobanks:
             self.pid_service.set_status(biobank["pid"], Status.TERMINATED)
             self.printer.print(
