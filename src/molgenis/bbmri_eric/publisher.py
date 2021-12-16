@@ -3,7 +3,7 @@ from typing import List, Set
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.enricher import Enricher
 from molgenis.bbmri_eric.errors import EricError, EricWarning
-from molgenis.bbmri_eric.model import Node, NodeData, QualityInfo, Table
+from molgenis.bbmri_eric.model import Node, NodeData, QualityInfo, Table, TableType
 from molgenis.bbmri_eric.pid_manager import PidManager
 from molgenis.bbmri_eric.pid_service import PidService
 from molgenis.bbmri_eric.printer import Printer
@@ -33,20 +33,23 @@ class Publisher:
         copied over, the data is enriched with additional information.
         """
         self.warnings = []
+
         self.printer.print(f"✏️ Enriching data of node {node_data.node.code}")
-        self.printer.indent()
+        with self.printer.indentation():
+            Enricher(
+                node_data, self.quality_info, self.printer, self.existing_biobanks
+            ).enrich()
 
-        self.warnings += Enricher(
-            node_data, self.quality_info, self.printer, self.existing_biobanks
-        ).enrich()
-        self.warnings += self.pid_manager.assign_and_update_biobank_pids(
-            node_data.biobanks, self.existing_biobanks
-        )
+        self.printer.print(f"🆔 Managing PIDs of node {node_data.node.code}")
+        with self.printer.indentation():
+            self.warnings += self.pid_manager.assign_biobank_pids(node_data.biobanks)
+            self.pid_manager.update_biobank_pids(
+                node_data.biobanks, self.existing_biobanks
+            )
 
-        self.printer.dedent()
-
-        self.printer.print(f"✉️ Copying data of node {node_data.node.code}")
-        self._copy_node_data(node_data)
+        self.printer.print(f"💾 Copying data of node {node_data.node.code}")
+        with self.printer.indentation():
+            self._copy_node_data(node_data)
         return self.warnings
 
     def _copy_node_data(self, node_data: NodeData):
@@ -56,7 +59,6 @@ class Publisher:
         1. New/existing rows are upserted in the combined tables
         2. Removed rows are deleted from the combined tables
         """
-        self.printer.indent()
         for table in node_data.import_order:
             self.printer.print(f"Upserting rows in {table.type.base_id}")
             try:
@@ -70,7 +72,6 @@ class Publisher:
                 self._delete_rows(table, node_data.node)
             except MolgenisRequestError as e:
                 raise EricError(f"Error deleting rows from {table.type.base_id}") from e
-        self.printer.dedent()
 
     def _delete_rows(self, table: Table, node: Node):
         """
@@ -90,10 +91,18 @@ class Publisher:
         undeletable_ids = self.quality_info.get_qualities(table.type).keys()
         deletable_ids = deleted_ids.difference(undeletable_ids)
 
+        # For deleted biobanks, update the handle
+        if table.type == TableType.BIOBANKS:
+            with self.printer.indentation():
+                self.pid_manager.terminate_biobanks(
+                    [self.existing_biobanks.rows_by_id[id_] for id_ in deletable_ids]
+                )
+
         # Actually delete the rows in the combined tables
         if deletable_ids:
             self.printer.print(
-                f"Deleting {len(deletable_ids)} rows in {table.type.base_id}"
+                f"Deleting {len(deletable_ids)} row(s) in {table.type.base_id}",
+                indent=1,
             )
             self.session.delete_list(table.type.base_id, list(deletable_ids))
 

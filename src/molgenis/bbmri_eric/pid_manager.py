@@ -2,7 +2,7 @@ from typing import List
 
 from molgenis.bbmri_eric.errors import EricWarning
 from molgenis.bbmri_eric.model import Table
-from molgenis.bbmri_eric.pid_service import PidService
+from molgenis.bbmri_eric.pid_service import PidService, Status
 from molgenis.bbmri_eric.printer import Printer
 
 
@@ -12,22 +12,30 @@ class PidManager:
         self.printer = printer
         self.biobank_url_prefix = url.rstrip("/") + "/#/biobank/"
 
-    def assign_and_update_biobank_pids(
-        self, biobanks: Table, existing_biobanks: Table
-    ) -> List[EricWarning]:
-        self.printer.indent()
-
+    def assign_biobank_pids(self, biobanks: Table) -> List[EricWarning]:
         warnings = []
         for biobank in biobanks.rows:
             if "pid" not in biobank:
                 biobank["pid"] = self._register_biobank_pid(
                     biobank["id"], biobank["name"], warnings
                 )
-            elif biobank["name"] != existing_biobanks.rows_by_id.get(biobank["id"]):
-                self._update_biobank_name(biobank["pid"], biobank["name"])
 
-        self.printer.dedent()
         return warnings
+
+    def update_biobank_pids(self, biobanks: Table, existing_biobanks: Table):
+        existing_biobanks = existing_biobanks.rows_by_id
+        for biobank in biobanks.rows:
+            id_ = biobank["id"]
+            if id_ in existing_biobanks:
+                if biobank["name"] != existing_biobanks.get(biobank["id"])["name"]:
+                    self._update_biobank_name(biobank["pid"], biobank["name"])
+
+    def terminate_biobanks(self, biobanks: List[dict]):
+        for biobank in biobanks:
+            self.pid_service.set_status(biobank["pid"], Status.TERMINATED)
+            self.printer.print(
+                f"Set STATUS of {biobank['pid']} to {Status.TERMINATED.value}"
+            )
 
     def _register_biobank_pid(
         self, biobank_id: str, biobank_name: str, warnings: List[EricWarning]
@@ -42,7 +50,8 @@ class PidManager:
         if existing_pids:
             pid = existing_pids[0]
             warning = EricWarning(
-                f"One or more PIDs already exist for {url}: {str(existing_pids)}"
+                f'PID(s) already exist for new biobank "{biobank_name}": '
+                f"{str(existing_pids)}"
             )
             self.printer.print_warning(warning)
             warnings.append(warning)

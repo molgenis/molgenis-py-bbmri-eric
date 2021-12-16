@@ -83,7 +83,7 @@ class Enricher:
         """
         Adds the PIDs for existing biobanks.
         """
-        self.printer.print("Adding PIDs to biobanks")
+        self.printer.print("Adding existing PIDs to biobanks")
         for biobank in self.node_data.biobanks.rows:
             biobank_id = biobank["id"]
             if biobank_id in self.existing_biobank_pids:
