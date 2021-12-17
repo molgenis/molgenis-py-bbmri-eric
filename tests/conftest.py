@@ -1,8 +1,10 @@
 import pickle
+from unittest.mock import MagicMock
 
 import pkg_resources
 import pytest
 
+from molgenis.bbmri_eric.eric import Eric
 from molgenis.bbmri_eric.model import NodeData
 
 
@@ -18,3 +20,26 @@ def node_data() -> NodeData:
     node_data: NodeData = pickle.load(file)
     file.close()
     return node_data
+
+
+@pytest.fixture
+def session() -> MagicMock:
+    session = MagicMock()
+    return session
+
+
+@pytest.fixture
+def printer() -> MagicMock:
+    return MagicMock()
+
+
+@pytest.fixture
+def pid_service() -> MagicMock:
+    return MagicMock()
+
+
+@pytest.fixture
+def eric(session, printer, pid_service) -> Eric:
+    eric = Eric(session, pid_service)
+    eric.printer = printer
+    return eric
