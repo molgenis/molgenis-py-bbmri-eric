@@ -12,31 +12,8 @@ to the public combined tables of the directory.
 
 ## Usage
 
-These tools can be used as a library in a script or as a command line tool. In both
-cases, start by installing the library with `pip install molgenis-py-bbmri-eric`.
-
-### On the command line
-
-The command line tool is called `eric`. Here are some usage examples:
-
-Stage all external nodes:
-```
-eric stage all
-```
-
-Publish nodes UK and NL:
-```
-eric publish uk nl
-```
-
-Use another server as the directory:
-```
-eric stage be --target <URL_TO_DIRECTORY>
-```
-
-Please read the tool's help page (`eric -h`) for more information.
-
-### In a script
+These tools can be used as a library in a script. Start by installing the library with
+`pip install molgenis-py-bbmri-eric`.
 
 ```python
 from molgenis.bbmri_eric.bbmri_client import EricSession
@@ -98,7 +75,7 @@ pre-commit install
 
 Create an environment and install the package including all (dev) dependencies:
 ```
-pipenv install
+pipenv install --dev
 ```
 
 Enter the environment:
