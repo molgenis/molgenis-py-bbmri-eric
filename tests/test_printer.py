@@ -11,7 +11,8 @@ def test_indentation(capsys):
         line1
             line2
                 line3
-            line4
+                line4
+            line5
         """
     )
 
@@ -22,7 +23,8 @@ def test_indentation(capsys):
     printer.indent()
     printer.print("line3")
     printer.dedent()
-    printer.print("line4")
+    printer.print("line4", 1)
+    printer.print("line5")
 
     captured = capsys.readouterr()
     assert captured.out == expected
@@ -127,6 +129,26 @@ def test_print_summary(capsys):
     report.add_error(c, error)
 
     Printer().print_summary(report)
+
+    captured = capsys.readouterr()
+    assert captured.out == expected
+
+
+def test_with_indentation(capsys):
+    expected = textwrap.dedent(
+        """\
+        line1
+            line2
+        line3
+        """
+    )
+
+    printer = Printer()
+
+    printer.print("line1")
+    with printer.indentation():
+        printer.print("line2")
+    printer.print("line3")
 
     captured = capsys.readouterr()
     assert captured.out == expected
