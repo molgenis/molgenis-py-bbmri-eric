@@ -2,6 +2,11 @@
 
 ## Version 1.1.0 (development)
 
+- Persistent Identifiers (PIDs) for biobanks
+  - New biobanks are automatically assigned a PID
+  - Biobank name changes are reflected in its PID record
+  - Removal of a biobank is reflected in its PID record
+- Removed command-line "eric" command
 - Fixed issue #42 ID validation should not allow @ and .
 - Fixed issue #43 Current ID validation results in false-positive invalid IDs
 
