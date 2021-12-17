@@ -1,9 +1,9 @@
-from typing import List, Set
+from typing import List
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.enricher import Enricher
 from molgenis.bbmri_eric.errors import EricError, EricWarning
-from molgenis.bbmri_eric.model import Node, NodeData, QualityInfo, Table, TableType
+from molgenis.bbmri_eric.model import NodeData, QualityInfo, Table, TableType
 from molgenis.bbmri_eric.pid_manager import PidManager
 from molgenis.bbmri_eric.pid_service import PidService
 from molgenis.bbmri_eric.printer import Printer
@@ -23,9 +23,6 @@ class Publisher:
         self.pid_manager = PidManager(pid_service, printer, session.url)
         self.warnings: List[EricWarning] = []
         self.quality_info: QualityInfo = session.get_quality_info()
-        self.existing_biobanks: Table = session.get_published_biobanks(
-            ["id", "pid", "name", "national_node"]
-        )
 
     def publish(self, node_data: NodeData) -> List[EricWarning]:
         """
@@ -33,26 +30,30 @@ class Publisher:
         copied over, the data is enriched with additional information.
         """
         self.warnings = []
+        node = node_data.node
 
-        self.printer.print(f"✏️ Preparing data of node {node_data.node.code}")
+        self.printer.print(f"📦 Retrieving existing published data of node {node.code}")
+        existing_node_data = self.session.get_published_node_data(node)
+
+        self.printer.print("✏️ Preparing data")
         with self.printer.indentation():
             Enricher(
-                node_data, self.quality_info, self.printer, self.existing_biobanks
+                node_data, self.quality_info, self.printer, existing_node_data.biobanks
             ).enrich()
 
-        self.printer.print(f"🆔 Managing PIDs of node {node_data.node.code}")
+        self.printer.print("🆔 Managing PIDs")
         with self.printer.indentation():
             self.warnings += self.pid_manager.assign_biobank_pids(node_data.biobanks)
             self.pid_manager.update_biobank_pids(
-                node_data.biobanks, self.existing_biobanks
+                node_data.biobanks, existing_node_data.biobanks
             )
 
-        self.printer.print(f"💾 Copying data of node {node_data.node.code}")
+        self.printer.print("💾 Copying data to combined tables")
         with self.printer.indentation():
-            self._copy_node_data(node_data)
+            self._copy_node_data(node_data, existing_node_data)
         return self.warnings
 
-    def _copy_node_data(self, node_data: NodeData):
+    def _copy_node_data(self, node_data: NodeData, existing_node_data: NodeData):
         """
         Copies the data of a staging area to the combined tables. This happens in two
         phases:
@@ -70,11 +71,13 @@ class Publisher:
             self.printer.print(f"Deleting rows in {table.type.base_id}")
             try:
                 with self.printer.indentation():
-                    self._delete_rows(table, node_data.node)
+                    self._delete_rows(
+                        table, existing_node_data.table_by_type[table.type]
+                    )
             except MolgenisRequestError as e:
                 raise EricError(f"Error deleting rows from {table.type.base_id}") from e
 
-    def _delete_rows(self, table: Table, node: Node):
+    def _delete_rows(self, table: Table, existing_table: Table):
         """
         Deletes rows from a combined table that are not present in the staging area's
         table. If a row is referenced from the quality info tables, it is not deleted
@@ -85,7 +88,7 @@ class Publisher:
         """
         # Compare the ids from staging and production to see what was deleted
         staging_ids = {row["id"] for row in table.rows}
-        production_ids = self._get_production_ids(table, node)
+        production_ids = set(existing_table.rows_by_id.keys())
         deleted_ids = production_ids.difference(staging_ids)
 
         # Remove ids that we are not allowed to delete
@@ -95,7 +98,7 @@ class Publisher:
         # For deleted biobanks, update the handle
         if table.type == TableType.BIOBANKS:
             self.pid_manager.terminate_biobanks(
-                [self.existing_biobanks.rows_by_id[id_] for id_ in deletable_ids]
+                [existing_table.rows_by_id[id_] for id_ in deletable_ids]
             )
 
         # Actually delete the rows in the combined tables
@@ -115,17 +118,3 @@ class Publisher:
                     )
                     self.printer.print_warning(warning)
                     self.warnings.append(warning)
-
-    def _get_production_ids(self, table: Table, node: Node) -> Set[str]:
-        try:
-            rows = self.session.get(
-                table.type.base_id, batch_size=10000, attributes="id,national_node"
-            )
-        except MolgenisRequestError as e:
-            raise EricError(f"Error getting rows from {table.type.base_id}") from e
-
-        return {
-            row["id"]
-            for row in rows
-            if row.get("national_node", {}).get("id", "") == node.code
-        }

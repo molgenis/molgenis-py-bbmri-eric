@@ -147,20 +147,6 @@ class EricSession(ExtendedSession):
 
         return QualityInfo(biobanks=bb_qual, collections=coll_qual)
 
-    def get_published_biobanks(self, attributes: List[str]) -> Table:
-        """
-        Retrieves a selection attributes of the published biobanks
-        :return: a dictionary with id/row as key/value
-        """
-        rows = self.get(
-            TableType.BIOBANKS.base_id,
-            batch_size=10000,
-            attributes=",".join(attributes),
-        )
-        biobanks = utils.to_upload_format(rows)
-        meta = self.get_meta(TableType.BIOBANKS.base_id)
-        return Table.of(TableType.BIOBANKS, meta, biobanks)
-
     def get_node(self, code: str) -> Node:
         """
         Retrieves a single Node object from the national nodes table.
