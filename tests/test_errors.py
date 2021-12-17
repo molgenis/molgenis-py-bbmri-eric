@@ -5,7 +5,7 @@ from molgenis.bbmri_eric.errors import (
     EricError,
     EricWarning,
     ErrorReport,
-    global_error_handler,
+    requests_error_handler,
 )
 from molgenis.bbmri_eric.model import Node
 
@@ -48,7 +48,7 @@ def test_error_report():
 def test_requests_error_handler():
     exception = requests.exceptions.ConnectionError()
 
-    @global_error_handler
+    @requests_error_handler
     def raising_function():
         raise exception
 

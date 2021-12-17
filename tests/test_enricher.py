@@ -9,7 +9,7 @@ def test_enricher_node_codes(node_data):
     for table in node_data.import_order:
         assert "national_node" not in table.rows[0]
 
-    Enricher(node_data, MagicMock(), Printer())._set_national_node_code()
+    Enricher(node_data, MagicMock(), Printer(), MagicMock())._set_national_node_code()
 
     for table in node_data.import_order:
         assert table.rows[0]["national_node"] == "NO"
@@ -34,7 +34,7 @@ def test_enricher_commercial_use():
         "biobank3": {"collaboration_commercial": False},
     }
 
-    Enricher(node_data, MagicMock(), Printer())._set_commercial_use_bool()
+    Enricher(node_data, MagicMock(), Printer(), MagicMock())._set_commercial_use_bool()
 
     assert node_data.collections.rows[0]["commercial_use"] is True
     assert node_data.collections.rows[1]["commercial_use"] is False
@@ -59,7 +59,7 @@ def test_enricher_quality(node_data):
         },
     )
 
-    Enricher(node_data, q_info, Printer())._set_quality_info()
+    Enricher(node_data, q_info, Printer(), MagicMock())._set_quality_info()
 
     assert node_data.biobanks.rows_by_id["bbmri-eric:ID:NO_BIOBANK1"]["quality"] == [
         "quality1",

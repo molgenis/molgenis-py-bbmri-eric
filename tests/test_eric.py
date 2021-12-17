@@ -34,11 +34,14 @@ def test_stage_external_nodes(stager_mock):
 @patch("molgenis.bbmri_eric.eric.Stager")
 @patch("molgenis.bbmri_eric.eric.Validator")
 @patch("molgenis.bbmri_eric.eric.Publisher")
-def test_publish_node_staging_fails(publisher_mock, validator_mock, stager_mock):
+@patch("molgenis.bbmri_eric.eric.PidService")
+def test_publish_node_staging_fails(
+    pid_service_mock, publisher_mock, validator_mock, stager_mock
+):
     nl = ExternalServerNode("NL", "Netherlands", "url")
     session = EricSession("url")
     session.get_published_node_data = MagicMock()
-    eric = Eric(session)
+    eric = Eric(session, pid_service_mock)
     eric.printer = MagicMock()
     error = EricError("error")
     stager_mock.return_value.stage.side_effect = error
@@ -46,7 +49,7 @@ def test_publish_node_staging_fails(publisher_mock, validator_mock, stager_mock)
     report = eric.publish_nodes([nl])
 
     eric.printer.print_node_title.assert_called_once_with(nl)
-    publisher_mock.assert_called_with(session, eric.printer)
+    publisher_mock.assert_called_with(session, eric.printer, pid_service_mock)
     assert stager_mock.mock_calls == [
         mock.call(session, eric.printer),
         mock.call().stage(nl),
@@ -61,11 +64,14 @@ def test_publish_node_staging_fails(publisher_mock, validator_mock, stager_mock)
 @patch("molgenis.bbmri_eric.eric.Stager")
 @patch("molgenis.bbmri_eric.eric.Validator")
 @patch("molgenis.bbmri_eric.eric.Publisher")
-def test_publish_node_get_data_fails(publisher_mock, validator_mock, stager_mock):
+@patch("molgenis.bbmri_eric.eric.PidService")
+def test_publish_node_get_data_fails(
+    pid_service_mock, publisher_mock, validator_mock, stager_mock
+):
     nl = ExternalServerNode("NL", "Netherlands", "url")
     session = EricSession("url")
     session.get_staging_node_data = MagicMock()
-    eric = Eric(session)
+    eric = Eric(session, pid_service_mock)
     eric.printer = MagicMock()
     error = EricError("error")
     session.get_staging_node_data.side_effect = error
@@ -73,7 +79,7 @@ def test_publish_node_get_data_fails(publisher_mock, validator_mock, stager_mock
     report = eric.publish_nodes([nl])
 
     eric.printer.print_node_title.assert_called_once_with(nl)
-    publisher_mock.assert_called_with(session, eric.printer)
+    publisher_mock.assert_called_with(session, eric.printer, pid_service_mock)
     assert stager_mock.mock_calls == [
         mock.call(session, eric.printer),
         mock.call().stage(nl),
@@ -88,7 +94,8 @@ def test_publish_node_get_data_fails(publisher_mock, validator_mock, stager_mock
 @patch("molgenis.bbmri_eric.eric.Stager")
 @patch("molgenis.bbmri_eric.eric.Validator")
 @patch("molgenis.bbmri_eric.eric.Publisher")
-def test_publish_nodes(publisher_mock, validator_mock, stager_mock):
+@patch("molgenis.bbmri_eric.eric.PidService")
+def test_publish_nodes(pid_service_mock, publisher_mock, validator_mock, stager_mock):
     no = Node("NO", "succeeds with validation warnings")
     nl = ExternalServerNode("NL", "fails during publishing", "url")
     no_data = _mock_node_data(no)
@@ -100,7 +107,7 @@ def test_publish_nodes(publisher_mock, validator_mock, stager_mock):
     validator_mock.return_value.validate.side_effect = [[warning], []]
     error = EricError("error")
     publisher_mock.return_value.publish.side_effect = [[], error]
-    eric = Eric(session)
+    eric = Eric(session, pid_service_mock)
     eric.printer = MagicMock()
 
     report = eric.publish_nodes([no, nl])
@@ -117,7 +124,7 @@ def test_publish_nodes(publisher_mock, validator_mock, stager_mock):
         mock.call().validate(),
     ]
     assert publisher_mock.mock_calls == [
-        mock.call(session, eric.printer),
+        mock.call(session, eric.printer, pid_service_mock),
         mock.call().publish(no_data),
         mock.call().publish(nl_data),
     ]
