@@ -32,7 +32,7 @@ def test_table_factory_method():
     row2 = {"id": "2"}
     rows = [row1, row2]
 
-    table = Table.of(TableType.PERSONS, "eu_bbmri_eric_NL_persons", rows)
+    table = Table.of(TableType.PERSONS, MagicMock(), rows)
 
     assert table.rows_by_id["2"] == row2
     assert table.rows[0] == row1
@@ -65,10 +65,10 @@ def test_external_server_node():
 
 
 def test_node_data_order():
-    persons = Table.of(TableType.PERSONS, "NL_persons", [{"id": "1"}])
-    networks = Table.of(TableType.NETWORKS, "NL_persons", [{"id": "1"}])
-    biobanks = Table.of(TableType.BIOBANKS, "NL_persons", [{"id": "1"}])
-    collections = Table.of(TableType.COLLECTIONS, "NL_persons", [{"id": "1"}])
+    persons = Table.of(TableType.PERSONS, MagicMock(), [{"id": "1"}])
+    networks = Table.of(TableType.NETWORKS, MagicMock(), [{"id": "1"}])
+    biobanks = Table.of(TableType.BIOBANKS, MagicMock(), [{"id": "1"}])
+    collections = Table.of(TableType.COLLECTIONS, MagicMock(), [{"id": "1"}])
     node = Node("NL", "NL")
 
     node_data = NodeData(

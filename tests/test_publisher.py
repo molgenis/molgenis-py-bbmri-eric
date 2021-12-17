@@ -1,38 +1,44 @@
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
-from molgenis.bbmri_eric.bbmri_client import EricSession
+import pytest
+
 from molgenis.bbmri_eric.model import NodeData, QualityInfo
-from molgenis.bbmri_eric.printer import Printer
-from molgenis.bbmri_eric.publisher import Publisher
 
 
-@patch("molgenis.bbmri_eric.publisher.PidManager")
-@patch("molgenis.bbmri_eric.publisher.PidService")
-@patch("molgenis.bbmri_eric.publisher.Enricher")
+@pytest.fixture
+def enricher_init():
+    with patch("molgenis.bbmri_eric.publisher.Enricher") as enricher_mock:
+        yield enricher_mock
+
+
+@pytest.fixture
+def pid_manager_init():
+    with patch("molgenis.bbmri_eric.publisher.PidManager") as pid_manager_mock:
+        yield pid_manager_mock
+
+
 def test_publish(
-    enricher_mock, pid_manager_mock, pid_service_mock, node_data: NodeData
+    publisher,
+    enricher_init,
+    pid_manager_init,
+    pid_service,
+    node_data: NodeData,
+    session,
+    printer,
 ):
-    enricher_instance = enricher_mock.return_value
-    session = EricSession("url")
-    session.upsert_batched = MagicMock()
-    session.get_quality_info = MagicMock()
-    session.get_published_biobanks = MagicMock()
     existing_biobanks = MagicMock()
-    session.get_quality_info.return_value = MagicMock()
     session.get_published_biobanks.return_value = existing_biobanks
-    printer = Printer()
-    publisher = Publisher(session, printer, pid_service_mock)
     publisher._delete_rows = MagicMock()
 
     publisher.publish(node_data)
 
-    assert enricher_mock.called_with(node_data, printer)
-    enricher_instance.enrich.assert_called_once()
+    assert enricher_init.called_with(node_data, printer)
+    enricher_init.return_value.enrich.assert_called_once()
 
-    assert pid_manager_mock.called_with(pid_service_mock, printer, "url")
-    assert pid_manager_mock.assign_biobank_pids.called_with(node_data.biobanks)
-    assert pid_manager_mock.update_biobank_pids.called_with(
+    assert pid_manager_init.called_with(pid_service, printer, "url")
+    assert pid_manager_init.assign_biobank_pids.called_with(node_data.biobanks)
+    assert pid_manager_init.update_biobank_pids.called_with(
         node_data.biobanks, existing_biobanks
     )
 
@@ -51,24 +57,16 @@ def test_publish(
     ]
 
 
-@patch("molgenis.bbmri_eric.publisher.PidService")
-def test_delete_rows(pid_service_mock, node_data: NodeData):
-    q_info = QualityInfo(biobanks={"undeletable_id": ["quality"]}, collections={})
-    session = EricSession("url")
-    session.delete_list = MagicMock()
-    session.get = MagicMock()
+def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
     session.get.return_value = [
         {"id": "bbmri-eric:ID:NO_OUS", "national_node": {"id": "NO"}},
         {"id": "ignore_this_row", "national_node": {"id": "XX"}},
         {"id": "delete_this_row", "national_node": {"id": "NO"}},
         {"id": "undeletable_id", "national_node": {"id": "NO"}},
     ]
-    session.get_quality_info = MagicMock()
-    session.get_quality_info.return_value = q_info
-    session.get_published_biobanks = MagicMock()
-    existing_biobanks = MagicMock()
-    session.get_published_biobanks.return_value = existing_biobanks
-    publisher = Publisher(session, Printer(), pid_service_mock)
+    publisher.quality_info = QualityInfo(
+        biobanks={"undeletable_id": ["quality"]}, collections={}
+    )
 
     publisher._delete_rows(node_data.biobanks, node_data.node)
 

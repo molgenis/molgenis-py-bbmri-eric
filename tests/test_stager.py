@@ -12,6 +12,12 @@ from molgenis.bbmri_eric.stager import Stager
 from molgenis.client import MolgenisRequestError
 
 
+@pytest.fixture
+def external_server_init():
+    with patch("molgenis.bbmri_eric.stager.ExternalServerSession") as ext_session_mock:
+        yield ext_session_mock
+
+
 def test_stager():
     stager = Stager(EricSession("url"), Printer())
     stager._clear_staging_area = MagicMock(name="_clear_staging_area")
@@ -51,9 +57,8 @@ def test_clear_staging_area_error():
     assert str(e.value) == "Error clearing staging area of node NL"
 
 
-@patch("molgenis.bbmri_eric.stager.ExternalServerSession")
-def test_import_node(session_mock, node_data: NodeData):
-    source_session_mock_instance = session_mock.return_value
+def test_import_node(external_server_init, node_data: NodeData):
+    source_session_mock_instance = external_server_init.return_value
     source_session_mock_instance.get_node_data.return_value = node_data
     session = EricSession("url")
     session.add_batched = MagicMock(name="add_batched")
@@ -61,7 +66,7 @@ def test_import_node(session_mock, node_data: NodeData):
 
     Stager(session, Printer())._import_node(node)
 
-    session_mock.assert_called_with(node=node)
+    external_server_init.assert_called_with(node=node)
     source_session_mock_instance.get_node_data.assert_called_once()
     assert session.add_batched.mock_calls == [
         mock.call(
@@ -85,9 +90,8 @@ def test_import_node(session_mock, node_data: NodeData):
     ]
 
 
-@patch("molgenis.bbmri_eric.stager.ExternalServerSession")
-def test_import_node_get_node_error(session_mock, node_data: NodeData):
-    source_session_mock_instance = session_mock.return_value
+def test_import_node_get_node_error(external_server_init, node_data: NodeData):
+    source_session_mock_instance = external_server_init.return_value
     source_session_mock_instance.get_node_data.side_effect = MolgenisRequestError("")
     session = EricSession("url")
     node = ExternalServerNode("NO", "Norway", "url")
@@ -98,9 +102,8 @@ def test_import_node_get_node_error(session_mock, node_data: NodeData):
     assert str(e.value) == "Error getting data from url"
 
 
-@patch("molgenis.bbmri_eric.stager.ExternalServerSession")
-def test_import_node_copy_node_error(session_mock, node_data: NodeData):
-    source_session_mock_instance = session_mock.return_value
+def test_import_node_copy_node_error(external_server_init, node_data: NodeData):
+    source_session_mock_instance = external_server_init.return_value
     source_session_mock_instance.get_node_data.return_value = node_data
     session = EricSession("url")
     session.add_batched = MagicMock(name="add_batched")
