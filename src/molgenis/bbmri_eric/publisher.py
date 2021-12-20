@@ -98,7 +98,7 @@ class Publisher:
         # For deleted biobanks, update the handle
         if table.type == TableType.BIOBANKS:
             self.pid_manager.terminate_biobanks(
-                [existing_table.rows_by_id[id_] for id_ in deletable_ids]
+                [existing_table.rows_by_id[id_]["pid"] for id_ in deletable_ids]
             )
 
         # Actually delete the rows in the combined tables

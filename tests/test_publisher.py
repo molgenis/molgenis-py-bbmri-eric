@@ -73,9 +73,9 @@ def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
     )
     existing_biobanks_table = MagicMock()
     existing_biobanks_table.rows_by_id.return_value = {
-        "bbmri-eric:ID:NO_OUS": "test1",
-        "delete_this_row": "test3",
-        "undeletable_id": "test4",
+        "bbmri-eric:ID:NO_OUS": {"pid": "pid1"},
+        "delete_this_row": {"pid": "pid2"},
+        "undeletable_id": {"pid": "pid3"},
     }
     existing_biobanks_table.rows_by_id.keys.return_value = {
         "bbmri-eric:ID:NO_OUS",
@@ -85,7 +85,7 @@ def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
 
     publisher._delete_rows(node_data.biobanks, existing_biobanks_table)
 
-    publisher.pid_manager.terminate_biobanks({"delete_this_row"})
+    publisher.pid_manager.terminate_biobanks({"pid2"})
     session.delete_list.assert_called_with(
         "eu_bbmri_eric_biobanks", ["delete_this_row"]
     )
