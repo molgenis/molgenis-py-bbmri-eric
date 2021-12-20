@@ -42,14 +42,14 @@ class PidManager:
                 if biobank["name"] != existing_biobanks.get(biobank["id"])["name"]:
                     self._update_biobank_name(biobank["pid"], biobank["name"])
 
-    def terminate_biobanks(self, biobanks: List[dict]):
+    def terminate_biobanks(self, biobank_ids: List[str]):
         """
         Sets the STATUS of a PID to TERMINATED.
         """
-        for biobank in biobanks:
-            self.pid_service.set_status(biobank["pid"], Status.TERMINATED)
+        for biobank_id in biobank_ids:
+            self.pid_service.set_status(biobank_id, Status.TERMINATED)
             self.printer.print(
-                f"Set STATUS of {biobank['pid']} to {Status.TERMINATED.value}"
+                f"Set STATUS of {biobank_id} to {Status.TERMINATED.value}"
             )
 
     def _register_biobank_pid(

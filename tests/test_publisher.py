@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from molgenis.bbmri_eric.model import NodeData, QualityInfo
+from molgenis.bbmri_eric.model import NodeData, QualityInfo, TableType
 
 
 @pytest.fixture
@@ -27,9 +27,19 @@ def test_publish(
     session,
     printer,
 ):
-    existing_biobanks = MagicMock()
-    session.get_published_biobanks.return_value = existing_biobanks
     publisher._delete_rows = MagicMock()
+    existing_node_data = MagicMock()
+    biobanks = MagicMock()
+    collections = MagicMock()
+    networks = MagicMock()
+    persons = MagicMock()
+    existing_node_data.table_by_type = {
+        TableType.BIOBANKS: biobanks,
+        TableType.PERSONS: persons,
+        TableType.NETWORKS: networks,
+        TableType.COLLECTIONS: collections,
+    }
+    session.get_published_node_data.return_value = existing_node_data
 
     publisher.publish(node_data)
 
@@ -39,7 +49,7 @@ def test_publish(
     assert pid_manager_init.called_with(pid_service, printer, "url")
     assert pid_manager_init.assign_biobank_pids.called_with(node_data.biobanks)
     assert pid_manager_init.update_biobank_pids.called_with(
-        node_data.biobanks, existing_biobanks
+        node_data.biobanks, existing_node_data.biobanks
     )
 
     assert session.upsert_batched.mock_calls == [
@@ -50,29 +60,32 @@ def test_publish(
     ]
 
     assert publisher._delete_rows.mock_calls == [
-        mock.call(node_data.collections, node_data.node),
-        mock.call(node_data.biobanks, node_data.node),
-        mock.call(node_data.networks, node_data.node),
-        mock.call(node_data.persons, node_data.node),
+        mock.call(node_data.collections, collections),
+        mock.call(node_data.biobanks, biobanks),
+        mock.call(node_data.networks, networks),
+        mock.call(node_data.persons, persons),
     ]
 
 
 def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
-    session.get.return_value = [
-        {"id": "bbmri-eric:ID:NO_OUS", "national_node": {"id": "NO"}},
-        {"id": "ignore_this_row", "national_node": {"id": "XX"}},
-        {"id": "delete_this_row", "national_node": {"id": "NO"}},
-        {"id": "undeletable_id", "national_node": {"id": "NO"}},
-    ]
     publisher.quality_info = QualityInfo(
         biobanks={"undeletable_id": ["quality"]}, collections={}
     )
+    existing_biobanks_table = MagicMock()
+    existing_biobanks_table.rows_by_id.return_value = {
+        "bbmri-eric:ID:NO_OUS": "test1",
+        "delete_this_row": "test3",
+        "undeletable_id": "test4",
+    }
+    existing_biobanks_table.rows_by_id.keys.return_value = {
+        "bbmri-eric:ID:NO_OUS",
+        "delete_this_row",
+        "undeletable_id",
+    }
 
-    publisher._delete_rows(node_data.biobanks, node_data.node)
+    publisher._delete_rows(node_data.biobanks, existing_biobanks_table)
 
-    session.get.assert_called_with(
-        "eu_bbmri_eric_biobanks", batch_size=10000, attributes="id,national_node"
-    )
+    publisher.pid_manager.terminate_biobanks({"delete_this_row"})
     session.delete_list.assert_called_with(
         "eu_bbmri_eric_biobanks", ["delete_this_row"]
     )
