@@ -32,7 +32,8 @@ def test_assign_biobank_pids(pid_manager, pid_service):
     assert len(warnings) == 1
     assert (
         warnings[0].message
-        == "PID(s) already exist for new biobank \"biobank3\": ['pid3']"
+        == "PID(s) already exist for new biobank \"biobank3\": ['pid3']. Please check "
+        "the PID's contents!"
     )
 
 

@@ -66,7 +66,7 @@ class PidManager:
             pid = existing_pids[0]
             warning = EricWarning(
                 f'PID(s) already exist for new biobank "{biobank_name}": '
-                f"{str(existing_pids)}"
+                f"{str(existing_pids)}. Please check the PID's contents!"
             )
             self.printer.print_warning(warning)
             warnings.append(warning)

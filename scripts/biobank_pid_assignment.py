@@ -51,7 +51,7 @@ print("Getting data from the directory")
 biobanks = session.get_uploadable_data(table)
 
 print("Registering PIDs")
-url_prefix = session.url.rstrip("/") + "/#/biobank/"
+url_prefix = session.url + "#/biobank/"
 for biobank in biobanks:
     if "pid" in biobank:
         continue

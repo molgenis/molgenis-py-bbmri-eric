@@ -28,7 +28,7 @@ class ExtendedSession(Session):
 
     def __init__(self, url: str, token: Optional[str] = None):
         super(ExtendedSession, self).__init__(url, token)
-        self.url = url
+        self.url = self._root_url
 
     def get_uploadable_data(self, entity_type_id: str, *args, **kwargs) -> List[dict]:
         """
