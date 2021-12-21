@@ -53,3 +53,8 @@ def test_set_name(pid_service: PidService, handle_client):
 def test_set_status(pid_service: PidService, handle_client):
     pid_service.set_status("pid1", Status.TERMINATED)
     handle_client.modify_handle_value.assert_called_with("pid1", STATUS="TERMINATED")
+
+
+def test_remove_status(pid_service: PidService, handle_client):
+    pid_service.remove_status("pid1")
+    handle_client.delete_handle_value.assert_called_with("pid1", "STATUS")

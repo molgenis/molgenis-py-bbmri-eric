@@ -121,3 +121,12 @@ class PidService:
         :param status: a Status enum
         """
         self.client.modify_handle_value(pid, STATUS=status.value)
+
+    @pyhandle_error_handler
+    def remove_status(self, pid: str):
+        """
+        Removes the STATUS field of an existing PID.
+
+        :param pid: the PID to remove the STATUS field of
+        """
+        self.client.delete_handle_value(pid, "STATUS")
