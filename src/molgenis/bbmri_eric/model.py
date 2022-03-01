@@ -46,6 +46,15 @@ class TableMeta:
                 one_to_manys.append(attribute["data"]["name"])
         return one_to_manys
 
+    @property
+    def self_references(self) -> List[str]:
+        self_references = []
+        for attribute in self.meta["data"]["attributes"]["items"]:
+            if attribute["data"]["type"] in ("xref", "mref"):
+                if self.id in attribute["data"]["refEntityType"]["self"]:
+                    self_references.append(attribute["data"]["name"])
+        return self_references
+
 
 @dataclass(frozen=True)
 class Table:

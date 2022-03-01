@@ -55,7 +55,9 @@ class Stager:
 
                 self.printer.print(f"Importing data to {target_name}")
                 self.session.add_batched(
-                    target_name, utils.remove_one_to_manys(table.rows, table.meta)
+                    target_name,
+                    table.meta.self_references,
+                    utils.remove_one_to_manys(table.rows, table.meta),
                 )
         except MolgenisRequestError as e:
             raise EricError(f"Error copying from {node.url} to staging area") from e

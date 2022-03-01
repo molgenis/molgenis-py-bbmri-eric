@@ -89,3 +89,23 @@ def test_remove_one_to_manys(meta):
         },
         {"id": "collB"},
     ]
+
+
+def test_sort_self_references():
+    self_references = ["parent_collection"]
+    rows = [
+        {
+            "id": "collA",
+            "name": "CollectionA",
+            "parent_collection": "collB",
+        },
+        {"id": "collB", "name": "CollectionB"},
+    ]
+
+    assert utils.sort_self_references(rows, self_references) == [
+        {
+            "id": "collB",
+            "name": "CollectionB",
+        },
+        {"id": "collA", "name": "CollectionA", "parent_collection": "collB"},
+    ]

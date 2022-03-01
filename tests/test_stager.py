@@ -71,18 +71,22 @@ def test_import_node(external_server_init, node_data: NodeData):
     assert session.add_batched.mock_calls == [
         mock.call(
             "eu_bbmri_eric_NO_persons",
+            node_data.persons.meta.self_references,
             utils.remove_one_to_manys(node_data.persons.rows, node_data.persons.meta),
         ),
         mock.call(
             "eu_bbmri_eric_NO_networks",
+            node_data.networks.meta.self_references,
             utils.remove_one_to_manys(node_data.networks.rows, node_data.networks.meta),
         ),
         mock.call(
             "eu_bbmri_eric_NO_biobanks",
+            node_data.biobanks.meta.self_references,
             utils.remove_one_to_manys(node_data.biobanks.rows, node_data.biobanks.meta),
         ),
         mock.call(
             "eu_bbmri_eric_NO_collections",
+            node_data.collections.meta.self_references,
             utils.remove_one_to_manys(
                 node_data.collections.rows, node_data.collections.meta
             ),
