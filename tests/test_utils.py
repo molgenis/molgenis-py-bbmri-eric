@@ -100,6 +100,9 @@ def test_sort_self_references():
             "parent_collection": "collB",
         },
         {"id": "collB", "name": "CollectionB"},
+        {"id": "collC", "name": "CollectionC"},
+        {"id": "collD", "name": "CollectionD", "parent_collection": "collA"},
+        {"id": "collE", "name": "CollectionE", "parent_collection": "collB"},
     ]
 
     assert utils.sort_self_references(rows, self_references) == [
@@ -107,5 +110,11 @@ def test_sort_self_references():
             "id": "collB",
             "name": "CollectionB",
         },
+        {
+            "id": "collC",
+            "name": "CollectionC",
+        },
+        {"id": "collD", "name": "CollectionD", "parent_collection": "collA"},
         {"id": "collA", "name": "CollectionA", "parent_collection": "collB"},
+        {"id": "collE", "name": "CollectionE", "parent_collection": "collB"},
     ]

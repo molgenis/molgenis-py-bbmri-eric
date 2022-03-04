@@ -45,7 +45,7 @@ def remove_one_to_manys(rows: List[dict], meta: TableMeta) -> List[dict]:
     return copied_rows
 
 
-def sort_self_references(rows: List[dict], self_references: List) -> List[dict]:
+def sort_self_references(rows: List[dict], self_references: List[str]) -> List[dict]:
     """
     Make sure rows with a self-referencing column are added after the rows
     with the reference
@@ -54,11 +54,8 @@ def sort_self_references(rows: List[dict], self_references: List) -> List[dict]:
 
     # If all rows have a missing value for the self_referencing column, it won't be in
     # the DataFrame
-    ref_columns = list(
-        set(self_references).difference(
-            list(set(self_references).difference(df.columns))
-        )
-    )
+    ref_columns = list(set(self_references).intersection(df.columns))
+
     if ref_columns:
         df.sort_values(by=ref_columns, na_position="first", inplace=True)
 

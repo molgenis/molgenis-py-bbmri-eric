@@ -81,24 +81,28 @@ class ExtendedSession(Session):
         return response
 
     def update_batched(
-        self, entity_type_id: str, self_references: List, entities: List[dict]
+        self, entity_type_id: str, self_references: List[str], entities: List[dict]
     ):
         """Updates multiple entities in batches of 1000."""
         # TODO updating things in bulk will fail if there are self-references across
         #  batches. Dependency resolving is needed.
-        if self_references and entities:
+        #  2022-03: Partly solved by the next two lines. However this might not be
+        #  enough for more complex cases.
+        if self_references and len(entities) > 1000:
             entities = utils.sort_self_references(entities, self_references)
         batches = list(batched(entities, 1000))
         for batch in batches:
             self.update(entity_type_id, batch)
 
     def add_batched(
-        self, entity_type_id: str, self_references: List, entities: List[dict]
+        self, entity_type_id: str, self_references: List[str], entities: List[dict]
     ):
         """Adds multiple entities in batches of 1000."""
         # TODO adding things in bulk will fail if there are self-references across
         #  batches. Dependency resolving is needed.
-        if self_references and entities:
+        #  2022-03: Partly solved by the next two lines. However this might not be
+        #  enough for more complex cases.
+        if self_references and len(entities) > 1000:
             entities = utils.sort_self_references(entities, self_references)
         batches = list(batched(entities, 1000))
         for batch in batches:
