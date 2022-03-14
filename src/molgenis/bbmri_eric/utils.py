@@ -62,12 +62,10 @@ def sort_self_references(rows: List[dict], self_references: List[str]) -> List[d
     # Turn pd.DataFrame into list of dictionaries again
     sorted_data = df.to_dict("records")
 
-    # Remove missing values
-    # A NaN implemented following the standard, is the only value for which
-    # the inequality comparison with itself should return True:
+    # Remove missing (NaN) values
     for row in sorted_data:
         for column in df.columns:
-            if row[column] != row[column]:
+            if isnan(row[column]):
                 del row[column]
 
     return sorted_data
@@ -77,3 +75,9 @@ def batched(list_: List, batch_size: int):
     """Yield successive n-sized batches from list_."""
     for i in range(0, len(list_), batch_size):
         yield list_[i : i + batch_size]
+
+
+def isnan(value):
+    # A NaN implemented following the standard, is the only value for which
+    # the inequality comparison with itself should return True:
+    return value != value
