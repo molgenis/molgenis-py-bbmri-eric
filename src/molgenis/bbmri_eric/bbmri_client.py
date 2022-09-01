@@ -181,10 +181,12 @@ class EricSession(ExtendedSession):
         """
 
         biobank_qualities = self.get(
-            "eu_bbmri_eric_bio_qual_info", batch_size=10000, attributes="id,biobank,assess_level_bio"
+            "eu_bbmri_eric_bio_qual_info", batch_size=10000,
+            attributes="id,biobank,assess_level_bio"
         )
         collection_qualities = self.get(
-            "eu_bbmri_eric_col_qual_info", batch_size=10000, attributes="id,collection,assess_level_col"
+            "eu_bbmri_eric_col_qual_info", batch_size=10000,
+            attributes="id,collection,assess_level_col"
         )
 
         biobanks = utils.to_upload_format(biobank_qualities)
