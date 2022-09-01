@@ -300,13 +300,27 @@ class QualityInfo:
     biobanks: Dict[str, List[str]]
     """Dictionary of biobank ids and their quality ids"""
 
+    biobank_levels: Dict[str, List[str]]
+    """Dictionary of biobank ids and their assessment levels"""
+
     collections: Dict[str, List[str]]
     """Dictionary of collection ids and their quality ids"""
+
+    collection_levels: Dict[str, List[str]]
+    """Dictionary of collection ids and their assessment levels"""
 
     def get_qualities(self, table_type: TableType) -> Dict[str, List[str]]:
         if table_type == TableType.BIOBANKS:
             return self.biobanks
         elif table_type == TableType.COLLECTIONS:
             return self.collections
+        else:
+            return dict()
+
+    def get_levels(self, table_type: TableType) -> Dict[str, List[str]]:
+        if table_type == TableType.BIOBANKS:
+            return self.biobank_levels
+        elif table_type == TableType.COLLECTIONS:
+            return self.collection_levels
         else:
             return dict()

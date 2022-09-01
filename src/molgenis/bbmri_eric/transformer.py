@@ -48,6 +48,7 @@ class Transformer:
         self._set_quality_info()
         self._set_biobank_pids()
         self._set_combined_networks()
+        self._set_combined_qualities()
         self._merge_covid19_capabilities()
         self._set_collection_categories()
         return self.warnings
@@ -149,6 +150,23 @@ class Transformer:
             biobank = self.node_data.biobanks.rows_by_id[collection["biobank"]]
             collection["combined_network"] = list(
                 set(biobank["network"] + collection["network"])
+            )
+
+    def _set_combined_qualities(self):
+        """
+        For every collection of the Node, adds to the `combined_quality` field, the
+        union of the qualities of the collection itself and the ones of its biobank
+        """
+        self.printer.print("Adding combined qualities")
+
+        bb_levels = self.quality.get_levels(self.node_data.biobanks.type)
+        coll_levels = self.quality.get_levels(self.node_data.collections.type)
+        for collection in self.node_data.collections.rows:
+            biobank = self.node_data.biobanks.rows_by_id[collection["biobank"]]
+            bb_level = bb_levels.get(biobank["id"], [])
+            coll_level = coll_levels.get(collection["id"], [])
+            collection["combined_quality"] = list(
+                set(bb_level + coll_level)
             )
 
     def _merge_covid19_capabilities(self):
