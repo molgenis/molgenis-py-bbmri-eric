@@ -181,12 +181,14 @@ class EricSession(ExtendedSession):
         """
 
         biobank_qualities = self.get(
-            "eu_bbmri_eric_bio_qual_info", batch_size=10000,
-            attributes="id,biobank,assess_level_bio"
+            "eu_bbmri_eric_bio_qual_info",
+            batch_size=10000,
+            attributes="id,biobank,assess_level_bio",
         )
         collection_qualities = self.get(
-            "eu_bbmri_eric_col_qual_info", batch_size=10000,
-            attributes="id,collection,assess_level_col"
+            "eu_bbmri_eric_col_qual_info",
+            batch_size=10000,
+            attributes="id,collection,assess_level_col",
         )
 
         biobanks = utils.to_upload_format(biobank_qualities)
@@ -203,8 +205,12 @@ class EricSession(ExtendedSession):
             coll_qual[row["collection"]].append(row["id"])
             coll_level[row["collection"]].append(row["assess_level_col"])
 
-        return QualityInfo(biobanks=bb_qual, collections=coll_qual,
-                           biobank_levels=bb_level, collection_levels=coll_level)
+        return QualityInfo(
+            biobanks=bb_qual,
+            collections=coll_qual,
+            biobank_levels=bb_level,
+            collection_levels=coll_level,
+        )
 
     def get_node(self, code: str) -> Node:
         """

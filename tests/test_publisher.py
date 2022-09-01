@@ -74,8 +74,10 @@ def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
     }
     state: PublishingState = MagicMock()
     state.quality_info = QualityInfo(
-        biobanks={"undeletable_id": ["quality"]}, collections={}, biobank_levels={},
-        collection_levels={}
+        biobanks={"undeletable_id": ["quality"]},
+        collections={},
+        biobank_levels={},
+        collection_levels={},
     )
     state.report = ErrorReport([Node.of("NO")])
 

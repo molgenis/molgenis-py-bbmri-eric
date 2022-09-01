@@ -202,15 +202,16 @@ def test_transformer_combined_quality(node_data, transformer):
         biobank_levels={
             "bbmri-eric:ID:NO_BIOBANK1": ["level_bio1", "level_bio2"],
             "bbmri-eric:ID:NO_CoronaTrondelag": ["level_bio3"],
-            "bbmri-eric:ID:NO_SorlandetHospital": ["level_bio_col"]
+            "bbmri-eric:ID:NO_SorlandetHospital": ["level_bio_col"],
         },
         collections={},
         collection_levels={
             "bbmri-eric:ID:NO_bbmri-eric:ID:NO_CancerBiobankOUH:collection"
             ":all_samples_samples": ["level_col5"],
             "bbmri-eric:ID:NO_CoronaTrondelag:collection:COVID19": ["level_col2"],
-            "bbmri-eric:ID:NO_SorlandetHospital:collection:all_ColoRectalCancer":
-            ["level_bio_col"]
+            "bbmri-eric:ID:NO_SorlandetHospital:collection:all_ColoRectalCancer": [
+                "level_bio_col"
+            ],
         },
     )
     transformer.node_data = node_data
@@ -218,22 +219,33 @@ def test_transformer_combined_quality(node_data, transformer):
 
     transformer._set_combined_qualities()
 
-    assert "combined_quality" not in \
-           node_data.biobanks.rows_by_id["bbmri-eric:ID:NO_BIOBANK1"]
-    assert sorted(node_data.collections.rows_by_id[
-        "bbmri-eric:ID:NO_BIOBANK1:collection:all_samples"
-    ]["combined_quality"]) == sorted(["level_bio1", "level_bio2"])
-    assert sorted(node_data.collections.rows_by_id[
-        "bbmri-eric:ID:NO_CoronaTrondelag:collection:COVID19"
-    ]["combined_quality"]) == sorted(["level_col2", "level_bio3"])
+    assert (
+        "combined_quality"
+        not in node_data.biobanks.rows_by_id["bbmri-eric:ID:NO_BIOBANK1"]
+    )
+    assert sorted(
+        node_data.collections.rows_by_id[
+            "bbmri-eric:ID:NO_BIOBANK1:collection:all_samples"
+        ]["combined_quality"]
+    ) == sorted(["level_bio1", "level_bio2"])
+    assert sorted(
+        node_data.collections.rows_by_id[
+            "bbmri-eric:ID:NO_CoronaTrondelag:collection:COVID19"
+        ]["combined_quality"]
+    ) == sorted(["level_col2", "level_bio3"])
     assert node_data.collections.rows_by_id[
         "bbmri-eric:ID:NO_bbmri-eric:ID:NO_CancerBiobankOUH:collection"
-        ":all_samples_samples"]["combined_quality"] == ["level_col5"]
+        ":all_samples_samples"
+    ]["combined_quality"] == ["level_col5"]
     assert node_data.collections.rows_by_id[
-        "bbmri-eric:ID:NO_SorlandetHospital:collection:" 
-        "all_ColoRectalCancer"]["combined_quality"] == ["level_bio_col"]
-    assert node_data.collections.rows_by_id[
-        "bbmri-eric:ID:NO_moba:collection:all_samples"]["combined_quality"] == []
+        "bbmri-eric:ID:NO_SorlandetHospital:collection:" "all_ColoRectalCancer"
+    ]["combined_quality"] == ["level_bio_col"]
+    assert (
+        node_data.collections.rows_by_id[
+            "bbmri-eric:ID:NO_moba:collection:all_samples"
+        ]["combined_quality"]
+        == []
+    )
 
 
 def test_merge_covid19_capabilities(transformer):

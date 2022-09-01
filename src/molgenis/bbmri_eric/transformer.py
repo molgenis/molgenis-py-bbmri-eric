@@ -165,9 +165,7 @@ class Transformer:
             biobank = self.node_data.biobanks.rows_by_id[collection["biobank"]]
             bb_level = bb_levels.get(biobank["id"], [])
             coll_level = coll_levels.get(collection["id"], [])
-            collection["combined_quality"] = list(
-                set(bb_level + coll_level)
-            )
+            collection["combined_quality"] = list(set(bb_level + coll_level))
 
     def _merge_covid19_capabilities(self):
         """
