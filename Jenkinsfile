@@ -26,7 +26,7 @@ pipeline {
                 container('python') {
                     script {
                         sh "pip install tox"
-                        sh "pip install -I importlib_metadata==4.12.0"
+                        sh "pip install -I importlib-metadata==4.12.0"
                         sh "pip install pre-commit"
                         sh "pre-commit install"
                     }
