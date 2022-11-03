@@ -25,7 +25,7 @@ pipeline {
                 }
                 container('python') {
                     script {
-                        sh "pip install tox"
+                        sh "pip install tox==3.26.0"
                         sh "pip install pre-commit"
                         sh "pre-commit install"
                     }
