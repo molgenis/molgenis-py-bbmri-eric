@@ -28,6 +28,7 @@ pipeline {
                         sh "pip install tox"
                         sh "pip uninstall -y importlib-metadata"
                         sh "pip install importlib-metadata==4.12.0"
+                        sh "pip install --upgrade flake8"
                         sh "pip install pre-commit"
                         sh "pip list"
                         sh "pre-commit install"
