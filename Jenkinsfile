@@ -25,6 +25,8 @@ pipeline {
                 }
                 container('python') {
                     script {
+                        sh "pip install zipp==3.8.1"
+                        sh "pip install typing-extensions==4.3.0"
                         sh "pip install importlib-metadata==4.12.0"
                         sh "pip install tox"
                         sh "pip install pre-commit"
