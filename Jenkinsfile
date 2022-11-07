@@ -26,6 +26,7 @@ pipeline {
                 container('python') {
                     script {
                         sh "pip list"
+                        sh "pip install --upgrade pip"
                         sh "pip install virtualenv==20.16.5"
                         sh "pip install zipp==3.8.1"
                         sh "pip install typing-extensions==4.3.0"
