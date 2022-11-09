@@ -4,7 +4,7 @@ pipeline {
             // the shared pod template defined on the Jenkins server config
             inheritFrom 'shared'
             // pod template defined in molgenis/molgenis-jenkins-pipeline repository
-            yaml libraryResource("pod-templates/python.yaml")
+            yaml libraryResource("pod-templates/python-3.10.yaml")
         }
     }
     stages {
