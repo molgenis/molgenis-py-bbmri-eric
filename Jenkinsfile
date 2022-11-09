@@ -25,16 +25,8 @@ pipeline {
                 }
                 container('python') {
                     script {
-                        sh "pip list"
-                        sh "pip install --upgrade pip"
-                        sh "pip install identify==2.5.5"
-                        sh "pip install virtualenv==20.16.5"
-                        sh "pip install zipp==3.8.1"
-                        sh "pip install typing-extensions==4.3.0"
-                        sh "pip install importlib-metadata==4.12.0"
-                        sh "pip install tox==3.26.0"
+                        sh "pip install tox"
                         sh "pip install pre-commit"
-                        sh "pip list"
                         sh "pre-commit install"
                     }
                 }
