@@ -7,6 +7,7 @@ such a way that is safe to use as an acceptance test environment:
 2. Removes production PIDs and replaces them with test PIDs
 3. Disables some scheduled jobs
 4. Removes people from email lists in scheduled jobs (except the support email)
+5. Updates the Google Analytics settings
 
 Requires a .env file next to it to configure. Example:
 
@@ -16,6 +17,7 @@ HOOK_SERVER_URL=https://myserver/
 HOOK_PYHANDLE_CREDS_JSON=pyhandle_creds.json
 HOOK_USE_LIVE_PID_SERVICE=True
 HOOK_MOLGENIS_SUPPORT_EMAIL=molgenis-support@umcg.nl
+HOOK_GA_ID=ga_id
 
 Setting HOOK_USE_LIVE_PID_SERVICE to False will use the DummyPidService instead, which
 will not create actual handles but will fill the column with fake PIDs.
@@ -38,6 +40,7 @@ url = config["HOOK_SERVER_URL"]
 pyhandle_creds = config["HOOK_PYHANDLE_CREDS_JSON"]
 use_live_pid_service = config["HOOK_USE_LIVE_PID_SERVICE"].lower() == "true"
 support_email = config["HOOK_MOLGENIS_SUPPORT_EMAIL"]
+ga_id = config["HOOK_GA_ID"]
 
 
 def run():
@@ -51,6 +54,7 @@ def run():
     overwrite_pids(session, logger)
     disable_jobs(session, logger)
     remove_job_emails(session, logger)
+    update_ga_settings(session, logger)
 
     logger.info("Finished!")
 
@@ -133,6 +137,41 @@ def remove_job_emails(session: EricSession, logger):
 
         session.update_one(job_entity, job["id"], "failureEmail", failure_email)
         session.update_one(job_entity, job["id"], "successEmail", success_email)
+
+
+def update_ga_settings(session: EricSession, logger):
+    logger.info("Update Google Analytics settings")
+
+    settings_entity = "sys_set_app"
+    settings = session.get(settings_entity)
+
+    for setting in settings:
+        ga_acc_privacy_friendly = False
+        tracking_code_footer = f"""</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script src="https://www.googletagmanager.com/gtag/js?id={ga_id}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){{dataLayer.push(arguments);}}
+  gtag('js', new Date());
+
+  gtag('config', '{ga_id}');
+</script>"""
+
+        if "ga_tracking_id" in setting:
+            session.update_one(settings_entity, setting["id"], "ga_tracking_id", ga_id)
+            session.update_one(
+                settings_entity,
+                setting["id"],
+                "tracking_code_footer",
+                tracking_code_footer,
+            )
+            session.update_one(
+                settings_entity,
+                setting["id"],
+                "ga_acc_privacy_friendly",
+                ga_acc_privacy_friendly,
+            )
 
 
 if __name__ == "__main__":
