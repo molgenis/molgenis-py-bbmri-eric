@@ -10,10 +10,11 @@ from molgenis.bbmri_eric.utils import to_ordered_dict
 
 
 class TableType(Enum):
-    """Enum representing the four tables each national node has."""
+    """Enum representing the five tables each national node has."""
 
     PERSONS = "persons"
     NETWORKS = "networks"
+    ALSO_KNOWN = "also_known_in"
     BIOBANKS = "biobanks"
     COLLECTIONS = "collections"
 
@@ -141,6 +142,7 @@ class Node:
     _classifiers = {
         TableType.PERSONS: "contactID",
         TableType.NETWORKS: "networkID",
+        TableType.ALSO_KNOWN: "akiID",
         TableType.BIOBANKS: "ID",
         TableType.COLLECTIONS: "ID",
     }
@@ -207,11 +209,12 @@ class Source(Enum):
 
 @dataclass
 class EricData(ABC):
-    """Abstract base class for containers storing rows from the four ERIC tables:
-    persons, networks, biobanks and collections."""
+    """Abstract base class for containers storing rows from the five ERIC tables:
+    persons, networks, also_known_in, biobanks and collections."""
 
     source: Source
     persons: Table
+    also_known_in: Table
     networks: Table
     biobanks: Table
     collections: Table
@@ -221,18 +224,25 @@ class EricData(ABC):
         self.table_by_type = {
             TableType.PERSONS: self.persons,
             TableType.NETWORKS: self.networks,
+            TableType.ALSO_KNOWN: self.also_known_in,
             TableType.BIOBANKS: self.biobanks,
             TableType.COLLECTIONS: self.collections,
         }
 
     @property
     def import_order(self) -> List[Table]:
-        return [self.persons, self.networks, self.biobanks, self.collections]
+        return [
+            self.persons,
+            self.networks,
+            self.also_known_in,
+            self.biobanks,
+            self.collections,
+        ]
 
 
 @dataclass
 class NodeData(EricData):
-    """Container object storing the four tables of a single node."""
+    """Container object storing the five tables of a single node."""
 
     node: Node
 
@@ -261,7 +271,7 @@ class NodeData(EricData):
 
 
 class MixedData(EricData):
-    """Container object storing the four tables with mixed origins, for example from
+    """Container object storing the five tables with mixed origins, for example from
     the combined tables or from multiple staging areas."""
 
     @staticmethod
@@ -271,6 +281,7 @@ class MixedData(EricData):
     def merge(self, other_data: EricData):
         self.persons.rows_by_id.update(other_data.persons.rows_by_id)
         self.networks.rows_by_id.update(other_data.networks.rows_by_id)
+        self.also_known_in.rows_by_id.update(other_data.also_known_in.rows_by_id)
         self.biobanks.rows_by_id.update(other_data.biobanks.rows_by_id)
         self.collections.rows_by_id.update(other_data.collections.rows_by_id)
 
@@ -286,6 +297,7 @@ class MixedData(EricData):
             source=self.source,
             persons=Table.of_empty(TableType.PERSONS, self.persons.meta),
             networks=Table.of_empty(TableType.NETWORKS, self.networks.meta),
+            also_known_in=Table.of_empty(TableType.ALSO_KNOWN, self.also_known_in.meta),
             biobanks=Table.of_empty(TableType.BIOBANKS, self.biobanks.meta),
             collections=Table.of_empty(TableType.COLLECTIONS, self.collections.meta),
         )

@@ -88,6 +88,7 @@ class Eric:
             AttributesRequest(
                 persons=["id", "national_node"],
                 networks=["id", "national_node"],
+                also_known_in=["id", "national_node"],
                 biobanks=["id", "pid", "name", "national_node"],
                 collections=["id", "national_node"],
             ),
