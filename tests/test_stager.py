@@ -53,6 +53,7 @@ def test_clear_staging_area():
     assert session.delete.mock_calls == [
         mock.call("eu_bbmri_eric_NL_collections"),
         mock.call("eu_bbmri_eric_NL_biobanks"),
+        mock.call("eu_bbmri_eric_NL_also_known_in"),
         mock.call("eu_bbmri_eric_NL_networks"),
         mock.call("eu_bbmri_eric_NL_persons"),
     ]

@@ -38,6 +38,7 @@ def test_publish(publisher, session):
             source=Source.TRANSFORMED,
             persons=Table.of_empty(TableType.PERSONS, MagicMock()),
             networks=Table.of_empty(TableType.NETWORKS, MagicMock()),
+            also_known_in=Table.of_empty(TableType.ALSO_KNOWN, MagicMock()),
             biobanks=Table.of_empty(TableType.BIOBANKS, MagicMock()),
             collections=Table.of_empty(TableType.COLLECTIONS, MagicMock()),
         ),
@@ -55,6 +56,11 @@ def test_publish(publisher, session):
             state.data_to_publish.collections, state.existing_data.collections, state
         ),
         mock.call(state.data_to_publish.biobanks, state.existing_data.biobanks, state),
+        mock.call(
+            state.data_to_publish.also_known_in,
+            state.existing_data.also_known_in,
+            state,
+        ),
         mock.call(state.data_to_publish.networks, state.existing_data.networks, state),
         mock.call(state.data_to_publish.persons, state.existing_data.persons, state),
     ]
@@ -63,12 +69,12 @@ def test_publish(publisher, session):
 def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
     existing_biobanks_table = MagicMock()
     existing_biobanks_table.rows_by_id.return_value = {
-        "bbmri-eric:ID:NO_OUS": {"pid": "pid1"},
+        "bbmri-eric:ID:NL_valid-biobankID-1": {"pid": "pid1"},
         "delete_this_row": {"pid": "pid2"},
         "undeletable_id": {"pid": "pid3"},
     }
     existing_biobanks_table.rows_by_id.keys.return_value = {
-        "bbmri-eric:ID:NO_OUS",
+        "bbmri-eric:ID:NL_valid-biobankID-1",
         "delete_this_row",
         "undeletable_id",
     }
@@ -87,6 +93,7 @@ def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
     session.delete_list.assert_called_with(
         "eu_bbmri_eric_biobanks", ["delete_this_row"]
     )
+
     publisher.warnings = [
         "Prevented the deletion of a row that is referenced from "
         "the quality info: biobanks undeletable_id."
