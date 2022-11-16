@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from molgenis.bbmri_eric.errors import ErrorReport
+from molgenis.bbmri_eric.errors import EricWarning, ErrorReport
 from molgenis.bbmri_eric.model import (
     MixedData,
     Node,
@@ -67,17 +67,20 @@ def test_publish(publisher, session):
 
 
 def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
-    existing_biobanks_table = MagicMock()
-    existing_biobanks_table.rows_by_id.return_value = {
-        "bbmri-eric:ID:NL_valid-biobankID-1": {"pid": "pid1"},
-        "delete_this_row": {"pid": "pid2"},
-        "undeletable_id": {"pid": "pid3"},
-    }
-    existing_biobanks_table.rows_by_id.keys.return_value = {
-        "bbmri-eric:ID:NL_valid-biobankID-1",
-        "delete_this_row",
-        "undeletable_id",
-    }
+    existing_biobanks_table = Table.of(
+        table_type=TableType.BIOBANKS,
+        meta=MagicMock(),
+        rows=[
+            {
+                "id": "bbmri-eric:ID:NL_valid-biobankID-1",
+                "pid": "pid1",
+                "national_node": "NL",
+            },
+            {"id": "delete_this_row", "pid": "pid2", "national_node": "NL"},
+            {"id": "undeletable_id", "pid": "pid3", "national_node": "NL"},
+        ],
+    )
+
     state: PublishingState = MagicMock()
     state.quality_info = QualityInfo(
         biobanks={"undeletable_id": ["quality"]},
@@ -85,16 +88,19 @@ def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
         biobank_levels={},
         collection_levels={},
     )
-    state.report = ErrorReport([Node.of("NO")])
+
+    state.report = ErrorReport([node_data.node])
+
+    warning = EricWarning(
+        "Prevented the deletion of a row that is referenced from "
+        "the quality info: biobanks undeletable_id."
+    )
 
     publisher._delete_rows(node_data.biobanks, existing_biobanks_table, state)
 
-    publisher.pid_manager.terminate_biobanks(["pid2"])
+    publisher.pid_manager.terminate_biobanks.assert_called_with(["pid2"])
     session.delete_list.assert_called_with(
         "eu_bbmri_eric_biobanks", ["delete_this_row"]
     )
 
-    publisher.warnings = [
-        "Prevented the deletion of a row that is referenced from "
-        "the quality info: biobanks undeletable_id."
-    ]
+    assert state.report.node_warnings[node_data.node] == [warning]
