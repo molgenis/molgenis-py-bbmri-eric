@@ -26,7 +26,6 @@ from molgenis.bbmri_eric.model import (
     TableMeta,
     TableType,
 )
-from molgenis.bbmri_eric.model_fitting import ExternalFitting
 from molgenis.client import MolgenisRequestError, Session
 
 
@@ -450,20 +449,15 @@ class ExternalServerSession(ExtendedSession):
         tables = dict()
         for table_type in TableType.get_import_order():
             id_ = table_type.base_id
-            try:
+            if not self.get("sys_md_EntityType", q=f"id=={id_}"):
+                tables[table_type.value] = Table.of_placeholder(table_type)
+            else:
                 meta = self.get_meta(id_)
                 tables[table_type.value] = Table.of(
                     table_type=table_type,
                     meta=meta,
                     rows=self.get_uploadable_data(id_, batch_size=10000),
                 )
-            except MolgenisRequestError as ex:
-                if "Unknown entity type 'eu_bbmri_eric_also_known_in'" in ex.message:
-                    tables[table_type.value] = ExternalFitting(
-                        self.node
-                    ).also_known_in_table(table_type)
-                else:
-                    self._raise_exception(ex)
 
         return NodeData.from_dict(
             node=self.node, source=Source.EXTERNAL_SERVER, tables=tables

@@ -95,6 +95,21 @@ class Table(BaseTable):
     def of_empty(table_type: TableType, meta: TableMeta):
         return Table(rows_by_id=OrderedDict(), meta=meta, type=table_type)
 
+    @staticmethod
+    def of_placeholder(table_type: TableType):
+        meta = {
+            "data": {
+                "id": table_type.base_id,
+                "attributes": {
+                    "items": [{"data": {"name": "id", "idAttribute": True}}]
+                },
+            }
+        }
+        return Table.of_empty(
+            table_type=table_type,
+            meta=TableMeta(meta=meta),
+        )
+
 
 @dataclass(frozen=True)
 class OntologyTable(BaseTable):

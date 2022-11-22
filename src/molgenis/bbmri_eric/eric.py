@@ -46,7 +46,7 @@ class Eric:
         for node in nodes:
             self.printer.print_node_title(node)
             try:
-                self._stage_node(node)
+                self._stage_node(node, report)
             except EricError as e:
                 self.printer.print_error(e)
                 report.add_node_error(node, e)
@@ -117,7 +117,7 @@ class Eric:
             self.printer.print_node_title(node)
             try:
                 if isinstance(node, ExternalServerNode):
-                    self._stage_node(node)
+                    self._stage_node(node, state.report)
                 node_data = self.preparator.prepare(node, state)
                 state.data_to_publish.merge(node_data)
             except EricError as e:
@@ -136,7 +136,9 @@ class Eric:
             state.report.set_global_error(e)
 
     @requests_error_handler
-    def _stage_node(self, node: ExternalServerNode):
+    def _stage_node(self, node: ExternalServerNode, report: ErrorReport):
         self.printer.print(f"📥 Staging data of node {node.code}")
         with self.printer.indentation():
-            self.stager.stage(node)
+            warnings = self.stager.stage(node)
+            if warnings:
+                report.add_node_warnings(node, warnings)

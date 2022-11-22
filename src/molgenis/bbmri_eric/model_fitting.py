@@ -1,53 +1,14 @@
 from collections import OrderedDict
 
+from unidecode import unidecode
+
 from molgenis.bbmri_eric.errors import EricWarning
-from molgenis.bbmri_eric.model import (
-    ExternalServerNode,
-    NodeData,
-    Table,
-    TableMeta,
-    TableType,
-)
+from molgenis.bbmri_eric.model import NodeData, Table, TableType
 from molgenis.bbmri_eric.printer import Printer
 from molgenis.bbmri_eric.utils import to_ordered_dict
 
 
-class ExternalFitting:
-    """
-    Sometimes, model changes are implemented in the published tables, but can't be
-    implemented yet for national nodes with external servers.
-    This class contains temporary solutions to account for the fact that tables or
-    attributes are missing in data models on the external server.
-    """
-
-    def __init__(self, node: ExternalServerNode):
-        self.node = node
-        self.printer = Printer()
-
-    def also_known_in_table(self, table_type: TableType):
-        """
-        In case the also_known_in table does not exist on the external server, create it
-        """
-        warning = EricWarning(f"Node {self.node.code} has no also_known_in table")
-        self.printer.print_warning(warning, indent=2)
-        table = Table.of_empty(
-            table_type=table_type,
-            meta=TableMeta(
-                meta={
-                    "data": {
-                        "id": "eu_bbmri_eric_also_known_in",
-                        "attributes": {
-                            "items": [{"data": {"name": "id", "idAttribute": True}}]
-                        },
-                    }
-                }
-            ),
-        )
-
-        return table
-
-
-class ModelFitting:
+class ModelFitter:
     """
     Sometimes, model changes are implemented in the published tables, but can't be
     implemented yet in all staging areas because action (adjustment of local databases,
@@ -67,7 +28,7 @@ class ModelFitting:
 
         self.warnings = []
 
-    def model_fitting(self):
+    def fit_model(self):
         """
         Transforms the data of a node according to the published model:
         1. Merges biobank 'covid19biobank' values into 'capabilities'
@@ -76,6 +37,10 @@ class ModelFitting:
         self._merge_covid19_capabilities()
         self._move_heads_to_persons()
         return self.warnings
+
+    def _add_warning(self, message: str):
+        self.printer.print_warning(EricWarning(message), indent=1)
+        self.warnings.append(message)
 
     def _merge_covid19_capabilities(self):
         """
@@ -88,13 +53,10 @@ class ModelFitting:
         caps = "capabilities"
         for biobank in self.node_data.biobanks.rows:
             if covid in biobank and biobank[covid]:
-
-                warning = EricWarning(
-                    f"Biobank {biobank['id']} uses deprecated '{covid}' column. "
-                    f"Use '{caps}' instead."
+                self._add_warning(
+                    f"Biobank {biobank['id']} uses deprecated {covid}' "
+                    f"column. Use '{caps}' instead."
                 )
-                self.printer.print_warning(warning, indent=1)
-                self.warnings.append(warning)
 
                 if not biobank[caps]:
                     biobank[caps] = []
@@ -118,7 +80,7 @@ class ModelFitting:
         """
         1. Checks if the head already exists as a person
         2a. If not, creates a new person
-        2b. If so, updates person information (f.e. adds the role)
+        2b. If so, updates person information (f.e. add the role)
         3. Fills the 'head' column with person ID
         4. Removes the redundant 'head' columns.
         """
@@ -131,50 +93,46 @@ class ModelFitting:
         ]
 
         for row in table.rows:
-            if not set(row.keys()).isdisjoint(set(head_columns)):
-                if "head" in row.keys():
-                    warning = EricWarning(
-                        f"{table.type.value.capitalize()[:-1]} has an head ID. "
-                        f"But still includes deprecated 'head' columns."
-                    )
-                    self.printer.print_warning(warning, indent=1)
-                    self.warnings.append(warning)
-                else:
-                    warning = EricWarning(
-                        f"{table.type.value.capitalize()[:-1]} {row['id']} uses "
-                        f"deprecated 'head' columns. "
-                        f"Move head info to persons instead."
-                    )
-                    self.printer.print_warning(warning, indent=1)
-                    self.warnings.append(warning)
+            if set(row.keys()).isdisjoint(set(head_columns)):
+                continue
 
-                    # Check if the head already exists as a person
-                    if "head_lastname" in row.keys() and "head_firstname" in row.keys():
-                        person_id = self._check_person(row)
-                        if person_id:
-                            row["head"] = person_id
-                        else:
-                            warning = EricWarning(
-                                f"Add {row['head_firstname']} {row['head_lastname']} "
-                                f"to persons "
-                            )
-                            self.printer.print_warning(warning, indent=1)
-                            self.warnings.append(warning)
-                            row["head"] = self._create_person(row)
+            if "head" in row.keys():
+                self._add_warning(
+                    f"{table.type.value.capitalize()[:-1]} has a head ID. "
+                    "But still includes deprecated 'head' columns."
+                )
 
-                    else:
-                        warning = EricWarning(
-                            f"{table.type.value.capitalize()[:-1]} {row['id']} has head"
-                            f" info without first and/or last name"
-                        )
-                        self.printer.print_warning(warning, indent=1)
-                        self.warnings.append(warning)
+            else:
+                self._add_warning(
+                    f"{table.type.value.capitalize()[:-1]} {row['id']} uses "
+                    "deprecated 'head' columns. Move head info to persons instead."
+                )
+
+                # Add head id to the table
+                row["head"] = self._add_head(row, table)
 
             for column in head_columns:
                 row.pop(column, None)
 
+    def _add_head(self, data, table):
+        if {"head_lastname", "head_firstname"}.issubset(set(data.keys())):
+            person_id = self._check_person(data)
+            if not person_id:
+                self._add_warning(
+                    f"Add {data['head_firstname']} {data['head_lastname']} to persons "
+                )
+                person_id = self._create_person(data)
+            return person_id
+        else:
+            self._add_warning(
+                f"{table.type.value.capitalize()[:-1]} {data['id']} has head"
+                " info without first and/or last name"
+            )
+
+        return None
+
     def _check_person(self, data):
-        # Check if a person exists, true if combination of first- and last name exists.
+        # A head exists if the combination of first- and last name exists in persons
         for person in self.node_data.persons.rows:
             if (
                 person.get("last_name", "NN").lower().replace(" ", "")
@@ -196,6 +154,7 @@ class ModelFitting:
         prefix = self.node_data.node.get_id_prefix(TableType.PERSONS)
         person = dict()
         person["id"] = prefix + data.get("head_lastname").lower().replace(" ", "")
+        person["id"] = unidecode(person["id"])
         person["title_before_name"] = data.get("head_title_before_name")
         person["first_name"] = data.get("head_firstname")
         person["last_name"] = data.get("head_lastname")
