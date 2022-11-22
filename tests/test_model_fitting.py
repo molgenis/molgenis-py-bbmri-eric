@@ -1,51 +1,19 @@
-from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
 
-from molgenis.bbmri_eric.errors import EricWarning
-from molgenis.bbmri_eric.model import ExternalServerNode, Table, TableMeta, TableType
-from molgenis.bbmri_eric.model_fitting import ExternalFitting, ModelFitting
+from molgenis.bbmri_eric.model_fitting import ModelFitter
 
 
 @pytest.fixture
-def external_fitting(printer) -> ExternalFitting:
-    external_fitting = ExternalFitting(node=ExternalServerNode("NL", "NL", "url"))
-    external_fitting.printer = printer
-    return external_fitting
-
-
-@pytest.fixture
-def model_fitting():
-    return ModelFitting(
+def model_fitter():
+    return ModelFitter(
         node_data=MagicMock(),
         printer=MagicMock(),
     )
 
 
-def test_also_known_in_table(external_fitting):
-    table_type = TableType.ALSO_KNOWN
-    table = external_fitting.also_known_in_table(table_type)
-    warning = EricWarning("Node NL has no also_known_in table")
-    assert external_fitting.printer.print_warning.mock_calls == [
-        mock.call(warning, indent=2)
-    ]
-    assert table == Table.of_empty(
-        table_type=table_type,
-        meta=TableMeta(
-            meta={
-                "data": {
-                    "id": "eu_bbmri_eric_also_known_in",
-                    "attributes": {
-                        "items": [{"data": {"name": "id", "idAttribute": True}}]
-                    },
-                }
-            }
-        ),
-    )
-
-
-def test_merge_covid19_capabilities(model_fitting):
+def test_merge_covid19_capabilities(model_fitter):
     node_data = MagicMock()
     node_data.biobanks.rows = [
         {"id": "0"},
@@ -55,9 +23,9 @@ def test_merge_covid19_capabilities(model_fitting):
         {"id": "4", "covid19biobank": ["c"], "capabilities": None},
         {"id": "5", "covid19biobank": ["a"], "capabilities": ["a", "b"]},
     ]
-    model_fitting.node_data = node_data
+    model_fitter.node_data = node_data
 
-    model_fitting._merge_covid19_capabilities()
+    model_fitter._merge_covid19_capabilities()
 
     assert node_data.biobanks.rows == [
         {"id": "0"},
@@ -69,10 +37,10 @@ def test_merge_covid19_capabilities(model_fitting):
     ]
 
 
-def test_move_head_info(node_data, model_fitting):
-    model_fitting.node_data = node_data
+def test_move_head_info(node_data, model_fitter):
+    model_fitter.node_data = node_data
 
-    model_fitting._move_heads_to_persons()
+    model_fitter._move_heads_to_persons()
 
     assert (
         node_data.persons.rows_by_id["bbmri-eric:contactID:NL_valid-personID-1"]["role"]

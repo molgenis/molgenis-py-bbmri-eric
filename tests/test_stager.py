@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
+from molgenis.bbmri_eric.errors import EricWarning
 from molgenis.bbmri_eric.model import ExternalServerNode, NodeData
 from molgenis.bbmri_eric.printer import Printer
 from molgenis.bbmri_eric.stager import Stager
@@ -41,6 +42,26 @@ def test_get_source_data(external_server_init):
 
     external_server_init.assert_called_with(node=node)
     assert source_data == node_data
+
+
+def test_check_tables(external_server_init):
+    node = ExternalServerNode("NL", "Netherlands", "url.nl")
+    session = external_server_init.return_value
+    session.get.return_value = []
+    session.node = node
+    stager = Stager(MagicMock(), Printer())
+
+    warnings = stager.stage(node)
+
+    external_server_init.assert_called_with(node=node)
+
+    assert session.get.call_count == 5
+
+    assert warnings[0] == EricWarning("Node NL has no persons table")
+    assert warnings[1] == EricWarning("Node NL has no networks table")
+    assert warnings[2] == EricWarning("Node NL has no also_known_in table")
+    assert warnings[3] == EricWarning("Node NL has no biobanks table")
+    assert warnings[4] == EricWarning("Node NL has no collections table")
 
 
 def test_clear_staging_area():

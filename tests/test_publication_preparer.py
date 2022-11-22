@@ -14,11 +14,11 @@ def validator_init():
 
 
 @pytest.fixture
-def model_fitting_init():
+def model_fitter_init():
     with patch(
-        "molgenis.bbmri_eric.publication_preparer.ModelFitting"
-    ) as model_fitting_mock:
-        yield model_fitting_mock
+        "molgenis.bbmri_eric.publication_preparer.ModelFitter"
+    ) as model_fitter_mock:
+        yield model_fitter_mock
 
 
 @pytest.fixture
@@ -42,8 +42,8 @@ def preparer(session, printer, pid_manager):
 def test_prepare(preparer, session):
     validate_func = MagicMock()
     preparer._validate_node = validate_func
-    model_fitting_func = MagicMock()
-    preparer._model_fitting_node = model_fitting_func
+    model_fitter_func = MagicMock()
+    preparer._fit_node_model = model_fitter_func
     transform_func = MagicMock()
     preparer._transform_node = transform_func
     manage_pids_func = MagicMock()
@@ -59,7 +59,7 @@ def test_prepare(preparer, session):
 
     session.get_staging_node_data.assert_called_with(nl)
     validate_func.assert_called_with(node_data, report)
-    model_fitting_func.assert_called_with(node_data, report)
+    model_fitter_func.assert_called_with(node_data, report)
     transform_func.assert_called_with(node_data, state)
     manage_pids_func.assert_called_with(node_data, state)
 
@@ -91,28 +91,28 @@ def test_validate_warnings(preparer: PublicationPreparer, validator_init, printe
     assert report.node_warnings[nl] == [warning]
 
 
-def test_model_fitting(preparer: PublicationPreparer, model_fitting_init):
-    model_fitting = MagicMock()
-    model_fitting_init.return_value = model_fitting
+def test_model_fitting(preparer: PublicationPreparer, model_fitter_init):
+    model_fitter = MagicMock()
+    model_fitter_init.return_value = model_fitter
 
-    preparer._model_fitting_node(MagicMock(), MagicMock())
+    preparer._fit_node_model(MagicMock(), MagicMock())
 
-    assert model_fitting_init.called
-    assert model_fitting.model_fitting.called
+    assert model_fitter_init.called
+    assert model_fitter.fit_model.called
 
 
-def test_model_fitting_warnings(preparer: PublicationPreparer, model_fitting_init):
-    model_fitting = MagicMock()
-    model_fitting_init.return_value = model_fitting
+def test_model_fitting_warnings(preparer: PublicationPreparer, model_fitter_init):
+    model_fitter = MagicMock()
+    model_fitter_init.return_value = model_fitter
     warning = EricWarning("warning")
-    model_fitting.model_fitting.return_value = [warning]
+    model_fitter.fit_model.return_value = [warning]
     node_data = MagicMock()
     nl = Node.of("NL")
     node_data.node = nl
     state = MagicMock()
     state.report = ErrorReport(nl)
 
-    preparer._model_fitting_node(node_data, state.report)
+    preparer._fit_node_model(node_data, state.report)
 
     assert state.report.node_warnings[nl] == [warning]
 
