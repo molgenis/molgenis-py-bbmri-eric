@@ -123,11 +123,11 @@ class ModelFitter:
                 )
                 person_id = self._create_person(data)
             return person_id
-        else:
-            self._add_warning(
-                f"{table.type.value.capitalize()[:-1]} {data['id']} has head"
-                " info without first and/or last name"
-            )
+
+        self._add_warning(
+            f"{table.type.value.capitalize()[:-1]} {data['id']} has head"
+            " info without first and/or last name"
+        )
 
         return None
 

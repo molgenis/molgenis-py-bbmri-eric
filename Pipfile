@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 molgenis-py-bbmri-eric = {editable = true, path = "."}
-pyhandle = "*"
 
 [dev-packages]
 pytest = "*"
