@@ -1,6 +1,7 @@
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.errors import ErrorReport, requests_error_handler
 from molgenis.bbmri_eric.model import Node, NodeData
+from molgenis.bbmri_eric.model_fitting import ModelFitter
 from molgenis.bbmri_eric.pid_manager import BasePidManager
 from molgenis.bbmri_eric.printer import Printer
 from molgenis.bbmri_eric.publisher import PublishingState
@@ -22,6 +23,7 @@ class PublicationPreparer:
     def prepare(self, node: Node, state: PublishingState) -> NodeData:
         node_data = self._get_node_data(node)
         self._validate_node(node_data, state.report)
+        self._fit_node_model(node_data, state.report)
         self._transform_node(node_data, state)
         self._manage_node_pids(node_data, state)
         return node_data
@@ -30,6 +32,16 @@ class PublicationPreparer:
         self.printer.print(f"🔎 Validating staged data of node {node_data.node.code}")
         with self.printer.indentation():
             warnings = Validator(node_data, self.printer).validate()
+            if warnings:
+                report.add_node_warnings(node_data.node, warnings)
+
+    def _fit_node_model(self, node_data: NodeData, report: ErrorReport):
+        self.printer.print(
+            f"⟺ Align staged data of node {node_data.node.code} "
+            f"with the published model"
+        )
+        with self.printer.indentation():
+            warnings = ModelFitter(node_data, self.printer).fit_model()
             if warnings:
                 report.add_node_warnings(node_data.node, warnings)
 

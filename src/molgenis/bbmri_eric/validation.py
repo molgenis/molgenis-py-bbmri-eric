@@ -47,6 +47,7 @@ class Validator:
         for biobank in self.node_data.biobanks.rows:
             self._validate_xref(biobank, "contact")
             self._validate_mref(biobank, "network")
+            self._validate_mref(biobank, "also_known_in")
 
     def _validate_collections(self):
         for collection in self.node_data.collections.rows:
@@ -54,6 +55,7 @@ class Validator:
             self._validate_xref(collection, "biobank")
             self._validate_xref(collection, "parent_collection")
             self._validate_mref(collection, "networks")
+            self._validate_mref(collection, "also_known_in")
             self._validate_ages(
                 collection,
             )

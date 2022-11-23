@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from molgenis.bbmri_eric.categories import CategoryMapper
 from molgenis.bbmri_eric.errors import EricWarning
 from molgenis.bbmri_eric.model import Node, NodeData, OntologyTable, QualityInfo, Table
@@ -50,7 +48,6 @@ class Transformer:
         self._set_biobank_labels()
         self._set_combined_networks()
         self._set_combined_qualities()
-        self._merge_covid19_capabilities()
         self._set_collection_categories()
         return self.warnings
 
@@ -177,34 +174,6 @@ class Transformer:
             bb_level = bb_levels.get(biobank["id"], [])
             coll_level = coll_levels.get(collection["id"], [])
             collection["combined_quality"] = list(set(bb_level + coll_level))
-
-    def _merge_covid19_capabilities(self):
-        """
-        Merges each biobank's 'covid19biobank' column into its 'capabilities' column and
-        then removes it.
-        """
-        self.printer.print("Merging 'covid19biobank' into 'capabilities'")
-
-        covid = "covid19biobank"
-        caps = "capabilities"
-        for biobank in self.node_data.biobanks.rows:
-            if covid in biobank and biobank[covid]:
-
-                warning = EricWarning(
-                    f"Biobank {biobank['id']} uses deprecated '{covid}' column. "
-                    f"Use '{caps}' instead."
-                )
-                self.printer.print_warning(warning, indent=1)
-                self.warnings.append(warning)
-
-                if not biobank[caps]:
-                    biobank[caps] = []
-
-                biobank[caps] = list(
-                    OrderedDict.fromkeys(biobank[caps] + biobank[covid])
-                )
-
-            biobank.pop(covid, None)
 
     def _set_collection_categories(self):
         """

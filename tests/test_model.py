@@ -15,6 +15,7 @@ def test_table_type_order():
     assert TableType.get_import_order() == [
         TableType.PERSONS,
         TableType.NETWORKS,
+        TableType.ALSO_KNOWN,
         TableType.BIOBANKS,
         TableType.COLLECTIONS,
     ]
@@ -23,6 +24,7 @@ def test_table_type_order():
 def test_table_type_base_ids():
     assert TableType.PERSONS.base_id == "eu_bbmri_eric_persons"
     assert TableType.NETWORKS.base_id == "eu_bbmri_eric_networks"
+    assert TableType.ALSO_KNOWN.base_id == "eu_bbmri_eric_also_known_in"
     assert TableType.BIOBANKS.base_id == "eu_bbmri_eric_biobanks"
     assert TableType.COLLECTIONS.base_id == "eu_bbmri_eric_collections"
 
@@ -76,6 +78,7 @@ def test_external_server_node():
 def test_node_data_order():
     persons = Table.of(TableType.PERSONS, MagicMock(), [{"id": "1"}])
     networks = Table.of(TableType.NETWORKS, MagicMock(), [{"id": "1"}])
+    also_known_in = Table.of(TableType.ALSO_KNOWN, MagicMock(), [{"id": "1"}])
     biobanks = Table.of(TableType.BIOBANKS, MagicMock(), [{"id": "1"}])
     collections = Table.of(TableType.COLLECTIONS, MagicMock(), [{"id": "1"}])
     node = Node("NL", "NL")
@@ -85,8 +88,15 @@ def test_node_data_order():
         source=Source.STAGING,
         persons=persons,
         networks=networks,
+        also_known_in=also_known_in,
         biobanks=biobanks,
         collections=collections,
     )
 
-    assert node_data.import_order == [persons, networks, biobanks, collections]
+    assert node_data.import_order == [
+        persons,
+        networks,
+        also_known_in,
+        biobanks,
+        collections,
+    ]

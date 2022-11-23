@@ -83,17 +83,19 @@ def test_publish_nodes(eric, report_init):
 
     error = EricError("error")
     eric.publisher.publish.side_effect = error
+    eric.stager.stage.return_value = []
 
     report = eric.publish_nodes([no, nl])
 
     assert eric.printer.print_node_title.mock_calls == [call(no), call(nl)]
+    eric.stager.stage.assert_has_calls([call(nl)])
     eric.preparator.prepare.assert_has_calls(
         [call(no, state), call(nl, state)], any_order=True
     )
     eric.publisher.publish.assert_called_with(state)
     assert len(report.node_errors) == 0
     assert report.error == error
-    assert len(report.node_warnings) == 0
+    assert len(report.node_warnings[nl]) == 0
     eric.printer.print_summary.assert_called_once_with(report)
 
 

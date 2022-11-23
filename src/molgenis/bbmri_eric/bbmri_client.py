@@ -33,6 +33,7 @@ from molgenis.client import MolgenisRequestError, Session
 class AttributesRequest:
     persons: List[str]
     networks: List[str]
+    also_known_in: List[str]
     biobanks: List[str]
     collections: List[str]
 
@@ -71,6 +72,24 @@ class ExtendedSession(Session):
         super(ExtendedSession, self).__init__(url, token)
         self.url = self._root_url
         self.import_api = self._root_url + self.IMPORT_API_LOC
+
+    def _raise_exception(self, ex):
+        """Raises an exception with error message from molgenis, extends the original
+        one as it does not account for KeyError"""
+        message = ex.args[0]
+        if ex.response.content:
+            try:
+                error = json.loads(ex.response.content.decode("utf-8"))["errors"][0][
+                    "message"
+                ]
+            except ValueError:  # Cannot parse JSON
+                error = ex.response.content
+            except KeyError:  # Cannot parse JSON
+                error = json.loads(ex.response.content.decode("utf-8"))["detail"]
+            error_msg = "{}: {}".format(message, error)
+            raise MolgenisRequestError(error_msg, ex.response)
+        else:
+            raise MolgenisRequestError("{}".format(message))
 
     def get_uploadable_data(self, entity_type_id: str, *args, **kwargs) -> List[dict]:
         """
@@ -291,7 +310,7 @@ class EricSession(ExtendedSession):
 
     def get_staging_node_data(self, node: Node) -> NodeData:
         """
-        Gets the four tables that belong to a single node's staging area.
+        Gets the five tables that belong to a single node's staging area.
 
         :param Node node: the node to get the staging data for
         :return: a NodeData object
@@ -311,7 +330,7 @@ class EricSession(ExtendedSession):
 
     def get_published_node_data(self, node: Node) -> NodeData:
         """
-        Gets the four tables that belong to a single node from the published tables.
+        Gets the five tables that belong to a single node from the published tables.
         Filters the rows based on the national_node field.
 
         :param Node node: the node to get the published data for
@@ -337,7 +356,7 @@ class EricSession(ExtendedSession):
         self, nodes: List[Node], attributes: AttributesRequest
     ) -> MixedData:
         """
-        Gets the four tables that belong to one or more nodes from the published tables.
+        Gets the five tables that belong to one or more nodes from the published tables.
         Filters the rows based on the national_node field.
 
         :param List[Node] nodes: the node(s) to get the published data for
@@ -371,7 +390,7 @@ class EricSession(ExtendedSession):
 
     def import_as_csv(self, data: EricData):
         """
-        Converts the four tables of an EricData object to CSV, bundles them in
+        Converts the five tables of an EricData object to CSV, bundles them in
         a ZIP archive and imports them through the import API.
         :param data: an EricData object
         """
@@ -398,7 +417,10 @@ class EricSession(ExtendedSession):
     def _create_csv(table: Table, file_name: str):
         with open(file_name, "w", encoding="utf-8") as fp:
             writer = csv.DictWriter(
-                fp, fieldnames=table.meta.attributes, quoting=csv.QUOTE_ALL
+                fp,
+                fieldnames=table.meta.attributes,
+                quoting=csv.QUOTE_ALL,
+                extrasaction="ignore",
             )
             writer.writeheader()
             for row in table.rows:
@@ -419,7 +441,7 @@ class ExternalServerSession(ExtendedSession):
 
     def get_node_data(self) -> NodeData:
         """
-        Gets the four tables of this node's external server.
+        Gets the five tables of this node's external server.
 
         :return: a NodeData object
         """
@@ -427,13 +449,15 @@ class ExternalServerSession(ExtendedSession):
         tables = dict()
         for table_type in TableType.get_import_order():
             id_ = table_type.base_id
-            meta = self.get_meta(id_)
-
-            tables[table_type.value] = Table.of(
-                table_type=table_type,
-                meta=meta,
-                rows=self.get_uploadable_data(id_, batch_size=10000),
-            )
+            if not self.get("sys_md_EntityType", q=f"id=={id_}"):
+                tables[table_type.value] = Table.of_placeholder(table_type)
+            else:
+                meta = self.get_meta(id_)
+                tables[table_type.value] = Table.of(
+                    table_type=table_type,
+                    meta=meta,
+                    rows=self.get_uploadable_data(id_, batch_size=10000),
+                )
 
         return NodeData.from_dict(
             node=self.node, source=Source.EXTERNAL_SERVER, tables=tables

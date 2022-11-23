@@ -27,7 +27,7 @@ def test_transformer_node_codes(node_data, transformer):
     transformer._set_national_node_code()
 
     for table in node_data.import_order:
-        assert table.rows[0]["national_node"] == "NO"
+        assert table.rows[0]["national_node"] == "NL"
 
 
 def test_transformer_commercial_use(transformer):
@@ -66,14 +66,11 @@ def test_transformer_commercial_use(transformer):
 def test_transformer_quality(node_data, transformer):
     q_info = QualityInfo(
         biobanks={
-            "bbmri-eric:ID:NO_BIOBANK1": ["quality1", "quality2"],
-            "bbmri-eric:ID:NO_CoronaTrondelag": ["quality3"],
+            "bbmri-eric:ID:NL_test_quality_biobank1": ["quality1", "quality2"],
+            "bbmri-eric:ID:NL_test_quality_biobank2": ["quality3"],
         },
         biobank_levels={},
-        collections={
-            "bbmri-eric:ID:NO_bbmri-eric:ID:NO_CancerBiobankOUH:collection"
-            ":all_samples_samples": ["quality1"]
-        },
+        collections={"bbmri-eric:ID:NL_bb1:collection:test_quality1": ["quality1"]},
         collection_levels={},
     )
     transformer.node_data = node_data
@@ -81,22 +78,23 @@ def test_transformer_quality(node_data, transformer):
 
     transformer._set_quality_info()
 
-    assert node_data.biobanks.rows_by_id["bbmri-eric:ID:NO_BIOBANK1"]["quality"] == [
-        "quality1",
-        "quality2",
-    ]
-    assert "quality" not in node_data.biobanks.rows_by_id["bbmri-eric:ID:NO_Janus"]
-    assert node_data.biobanks.rows_by_id["bbmri-eric:ID:NO_CoronaTrondelag"][
+    assert node_data.biobanks.rows_by_id["bbmri-eric:ID:NL_test_quality_biobank1"][
+        "quality"
+    ] == ["quality1", "quality2"]
+    assert (
+        "quality"
+        not in node_data.biobanks.rows_by_id["bbmri-eric:ID:NL_biobank_noQual"]
+    )
+    assert node_data.biobanks.rows_by_id["bbmri-eric:ID:NL_test_quality_biobank2"][
         "quality"
     ] == ["quality3"]
     assert node_data.collections.rows_by_id[
-        "bbmri-eric:ID:NO_bbmri-eric:ID:NO_CancerBiobankOUH:collection"
-        ":all_samples_samples"
+        "bbmri-eric:ID:NL_bb1:collection:test_quality1"
     ]["quality"] == ["quality1"]
     assert (
         "quality"
         not in node_data.collections.rows_by_id[
-            "bbmri-eric:ID:NO_moba:collection:all_samples"
+            "bbmri-eric:ID:NL_bb1:collection:test_noQual"
         ]
     )
 
@@ -219,18 +217,15 @@ def test_transformer_combined_quality(node_data, transformer):
     q_info = QualityInfo(
         biobanks={},
         biobank_levels={
-            "bbmri-eric:ID:NO_BIOBANK1": ["level_bio1", "level_bio2"],
-            "bbmri-eric:ID:NO_CoronaTrondelag": ["level_bio3"],
-            "bbmri-eric:ID:NO_SorlandetHospital": ["level_bio_col"],
+            "bbmri-eric:ID:NL_test_quality_biobank1": ["level_bio1", "level_bio2"],
+            "bbmri-eric:ID:NL_test_quality_biobank2": ["level_bio3"],
+            "bbmri-eric:ID:NL_test_quality_biobank3": ["level_bio_col"],
         },
         collections={},
         collection_levels={
-            "bbmri-eric:ID:NO_bbmri-eric:ID:NO_CancerBiobankOUH:collection"
-            ":all_samples_samples": ["level_col5"],
-            "bbmri-eric:ID:NO_CoronaTrondelag:collection:COVID19": ["level_col2"],
-            "bbmri-eric:ID:NO_SorlandetHospital:collection:all_ColoRectalCancer": [
-                "level_bio_col"
-            ],
+            "bbmri-eric:ID:NL_bb1:collection:test_quality1": ["level_col5"],
+            "bbmri-eric:ID:NL_bb1:collection:test_quality2": ["level_col2"],
+            "bbmri-eric:ID:NL_bb3:collection:test_quality3": ["level_bio_col"],
         },
     )
     transformer.node_data = node_data
@@ -240,55 +235,30 @@ def test_transformer_combined_quality(node_data, transformer):
 
     assert (
         "combined_quality"
-        not in node_data.biobanks.rows_by_id["bbmri-eric:ID:NO_BIOBANK1"]
+        not in node_data.biobanks.rows_by_id["bbmri-eric:ID:NL_biobank_noQual"]
     )
     assert sorted(
-        node_data.collections.rows_by_id[
-            "bbmri-eric:ID:NO_BIOBANK1:collection:all_samples"
-        ]["combined_quality"]
+        node_data.collections.rows_by_id["bbmri-eric:ID:NL_bb1:collection:test_noQual"][
+            "combined_quality"
+        ]
     ) == sorted(["level_bio1", "level_bio2"])
     assert sorted(
         node_data.collections.rows_by_id[
-            "bbmri-eric:ID:NO_CoronaTrondelag:collection:COVID19"
+            "bbmri-eric:ID:NL_bb1:collection:test_quality2"
         ]["combined_quality"]
     ) == sorted(["level_col2", "level_bio3"])
     assert node_data.collections.rows_by_id[
-        "bbmri-eric:ID:NO_bbmri-eric:ID:NO_CancerBiobankOUH:collection"
-        ":all_samples_samples"
+        "bbmri-eric:ID:NL_bb1:collection:test_quality1"
     ]["combined_quality"] == ["level_col5"]
     assert node_data.collections.rows_by_id[
-        "bbmri-eric:ID:NO_SorlandetHospital:collection:" "all_ColoRectalCancer"
+        "bbmri-eric:ID:NL_bb3:collection:test_quality3"
     ]["combined_quality"] == ["level_bio_col"]
     assert (
-        node_data.collections.rows_by_id[
-            "bbmri-eric:ID:NO_moba:collection:all_samples"
-        ]["combined_quality"]
+        node_data.collections.rows_by_id["bbmri-eric:ID:NL_valid-collectionID-1"][
+            "combined_quality"
+        ]
         == []
     )
-
-
-def test_merge_covid19_capabilities(transformer):
-    node_data = MagicMock()
-    node_data.biobanks.rows = [
-        {"id": "0"},
-        {"id": "1", "covid19biobank": None, "capabilities": None},
-        {"id": "2", "covid19biobank": None, "capabilities": ["a", "b"]},
-        {"id": "3", "covid19biobank": ["c"], "capabilities": ["a", "b"]},
-        {"id": "4", "covid19biobank": ["c"], "capabilities": None},
-        {"id": "5", "covid19biobank": ["a"], "capabilities": ["a", "b"]},
-    ]
-    transformer.node_data = node_data
-
-    transformer._merge_covid19_capabilities()
-
-    assert node_data.biobanks.rows == [
-        {"id": "0"},
-        {"id": "1", "capabilities": None},
-        {"id": "2", "capabilities": ["a", "b"]},
-        {"id": "3", "capabilities": ["a", "b", "c"]},
-        {"id": "4", "capabilities": ["c"]},
-        {"id": "5", "capabilities": ["a", "b"]},
-    ]
 
 
 def test_map_categories(transformer):
