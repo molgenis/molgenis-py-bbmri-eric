@@ -2,7 +2,7 @@
 ## Version 1.10.0 (development)
 
 ## Version 1.9.0
-BBMRI-model changes as described in this [document](https://docs.google.com/document/d/1h-xkU6uR8jytDnMm7wT38bk0ZdmXzywZ/edit?usp=sharing&ouid=103886117563984453369&rtpof=true&sd=true). 
+BBMRI-model changes as described in this [document](https://docs.google.com/document/d/1h-xkU6uR8jytDnMm7wT38bk0ZdmXzywZ/edit?usp=sharing&ouid=103886117563984453369&rtpof=true&sd=true).
 Main changes are:
 - Add also_known_in tables and column to staging areas
 - Move head info from biobanks and collections to persons
