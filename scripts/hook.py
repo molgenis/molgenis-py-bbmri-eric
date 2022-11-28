@@ -76,7 +76,7 @@ def overwrite_pids(session: EricSession, logger):
     response = session._session.patch(
         session._api_url + f"metadata/eu_bbmri_eric_biobanks/attributes/{pid_attr_id}",
         data=json.dumps({"readonly": False}),
-        headers=session._get_token_header_with_content_type(),
+        headers=session._headers.ct_token_header,
     )
     response.raise_for_status()
 
@@ -95,12 +95,12 @@ def overwrite_pids(session: EricSession, logger):
 
     logger.info("Overwriting production PIDs with test PIDs")
 
-    biobanks = session.get_uploadable_data("eu_bbmri_eric_biobanks")
+    biobanks = session.get("eu_bbmri_eric_biobanks", uploadable=True)
     for biobank in biobanks:
         biobank.pop("pid", None)
     pid_manager.assign_biobank_pids(Table.of(TableType.BIOBANKS, Mock(), biobanks))
 
-    session.update("eu_bbmri_eric_biobanks", biobanks)
+    session.update_all("eu_bbmri_eric_biobanks", biobanks)
 
     # ========================
 
@@ -109,7 +109,7 @@ def overwrite_pids(session: EricSession, logger):
     response = session._session.patch(
         session._api_url + f"metadata/eu_bbmri_eric_biobanks/attributes/{pid_attr_id}",
         data=json.dumps({"readonly": True}),
-        headers=session._get_token_header_with_content_type(),
+        headers=session._headers.ct_token_header,
     )
     response.raise_for_status()
 

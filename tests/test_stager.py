@@ -87,4 +87,4 @@ def test_import_node(session, external_server_init):
 
     Stager(session, Printer())._import_node(node_data)
 
-    session.import_as_csv.assert_called_with(converted_data)
+    session.upload_data.assert_called_with(converted_data)

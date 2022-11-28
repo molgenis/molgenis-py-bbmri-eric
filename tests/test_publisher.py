@@ -50,7 +50,7 @@ def test_publish(publisher, session):
 
     publisher.publish(state)
 
-    session.import_as_csv.assert_called_with(state.data_to_publish)
+    session.upload_data.assert_called_with(state.data_to_publish)
     assert publisher._delete_rows.mock_calls == [
         mock.call(
             state.data_to_publish.collections, state.existing_data.collections, state
@@ -91,7 +91,9 @@ def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
 
     state.report = ErrorReport([node_data.node])
 
-    warning = EricWarning(
+    warning1 = EricWarning("ID delete_this_row is deleted")
+
+    warning2 = EricWarning(
         "Prevented the deletion of a row that is referenced from "
         "the quality info: biobanks undeletable_id."
     )
@@ -103,4 +105,4 @@ def test_delete_rows(publisher, pid_service, node_data: NodeData, session):
         "eu_bbmri_eric_biobanks", ["delete_this_row"]
     )
 
-    assert state.report.node_warnings[node_data.node] == [warning]
+    assert state.report.node_warnings[node_data.node] == [warning1, warning2]

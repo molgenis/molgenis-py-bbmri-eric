@@ -137,12 +137,12 @@ class ModelFitter:
             if (
                 person.get("last_name", "NN").lower().replace(" ", "")
                 == data["head_lastname"].lower().replace(" ", "")
-                and person.get("first_name", "NN").lower()
-                == data["head_firstname"].lower()
+                and person.get("first_name", "NN").lower().strip()
+                == data["head_firstname"].lower().strip()
             ):
                 if "role" in person and person["role"] and data.get("head_role"):
                     roles = person["role"].split(" and ")
-                    roles.append(data.get("head_role"))
+                    roles.append(data.get("head_role").strip())
                     person["role"] = " and ".join(set(roles))
                 else:
                     person["role"] = data.get("head_role")

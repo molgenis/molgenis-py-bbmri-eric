@@ -65,7 +65,7 @@ class Publisher:
 
     def _upsert_data(self, state):
         try:
-            self.session.import_as_csv(state.data_to_publish)
+            self.session.upload_data(state.data_to_publish)
         except MolgenisRequestError as e:
             raise EricError("Error importing data to combined tables") from e
 
@@ -109,6 +109,12 @@ class Publisher:
                 f"Deleting {len(deletable_ids)} row(s) in {table.type.base_id}"
             )
             self.session.delete_list(table.type.base_id, list(deletable_ids))
+            for id_ in deletable_ids:
+                with self.printer.indentation():
+                    code = existing_table.rows_by_id[id_]["national_node"]
+                    warning = EricWarning(f"ID {id_} is deleted")
+                    self.printer.print_warning(warning)
+                    state.report.add_node_warnings(Node.of(code), [warning])
 
         # Show warning for every id that we prevented deletion of
         if deleted_ids != deletable_ids:
