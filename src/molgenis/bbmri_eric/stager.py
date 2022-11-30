@@ -68,4 +68,5 @@ class Stager:
         self.printer.print(
             f"💾 Saving data to the staging area of {source_data.node.code}"
         )
-        self.session.import_as_csv(source_data.convert_to_staging())
+
+        self.session.upload_data(source_data.convert_to_staging())

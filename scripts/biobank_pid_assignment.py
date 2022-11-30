@@ -49,7 +49,7 @@ print("Creating handle client")
 pid_service = PidService.from_credentials("pyhandle_creds.json")
 
 print("Getting data from the directory")
-biobanks = session.get_uploadable_data(table)
+biobanks = session.get(table, uploadable=True)
 
 print("Registering PIDs")
 url_prefix = pid_service.base_url + "#/biobank/"
@@ -63,6 +63,6 @@ for biobank in biobanks:
     print(f"Generated {pid} for {biobank['id']}")
 
 print("Uploading to directory")
-session.update(table, biobanks)
+session.update_all(table, biobanks)
 
 print("All done!")

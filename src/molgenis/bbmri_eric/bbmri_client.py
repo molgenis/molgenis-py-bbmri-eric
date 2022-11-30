@@ -1,18 +1,8 @@
-import csv
-import json
-import tempfile
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import Enum
-from pathlib import Path
-from time import sleep
-from typing import List, Optional
-from urllib.parse import quote_plus
-from zipfile import ZipFile
+from typing import List
 
-import requests
-
-from molgenis.bbmri_eric import utils
 from molgenis.bbmri_eric.model import (
     EricData,
     ExternalServerNode,
@@ -60,112 +50,7 @@ class ImportMetadataAction(Enum):
     IGNORE = "ignore"
 
 
-class ExtendedSession(Session):
-    """
-    Class containing functionality that the base molgenis python client Session class
-    does not have. Methods in this class could be moved to molgenis-py-client someday.
-    """
-
-    IMPORT_API_LOC = "plugin/importwizard/importFile/"
-
-    def __init__(self, url: str, token: Optional[str] = None):
-        super(ExtendedSession, self).__init__(url, token)
-        self.url = self._root_url
-        self.import_api = self._root_url + self.IMPORT_API_LOC
-
-    def _raise_exception(self, ex):
-        """Raises an exception with error message from molgenis, extends the original
-        one as it does not account for KeyError"""
-        message = ex.args[0]
-        if ex.response.content:
-            try:
-                error = json.loads(ex.response.content.decode("utf-8"))["errors"][0][
-                    "message"
-                ]
-            except ValueError:  # Cannot parse JSON
-                error = ex.response.content
-            except KeyError:  # Cannot parse JSON
-                error = json.loads(ex.response.content.decode("utf-8"))["detail"]
-            error_msg = "{}: {}".format(message, error)
-            raise MolgenisRequestError(error_msg, ex.response)
-        else:
-            raise MolgenisRequestError("{}".format(message))
-
-    def get_uploadable_data(self, entity_type_id: str, *args, **kwargs) -> List[dict]:
-        """
-        Returns all the rows of an entity type, transformed to the uploadable format.
-        """
-        rows = self.get(entity_type_id, *args, **kwargs)
-        return utils.to_upload_format(rows)
-
-    def update(self, entity_type_id: str, entities: List[dict]):
-        """Updates multiple entities."""
-        response = self._session.put(
-            self._api_url + "v2/" + quote_plus(entity_type_id),
-            headers=self._get_token_header_with_content_type(),
-            data=json.dumps({"entities": entities}),
-        )
-
-        try:
-            response.raise_for_status()
-        except requests.RequestException as ex:
-            self._raise_exception(ex)
-
-        return response
-
-    def get_meta(self, entity_type_id: str) -> TableMeta:
-        """Similar to get_entity_meta_data() of the parent Session class, but uses the
-        newer Metadata API instead of the REST API V1."""
-        response = self._session.get(
-            self._api_url + "metadata/" + quote_plus(entity_type_id),
-            headers=self._get_token_header(),
-        )
-        try:
-            response.raise_for_status()
-        except requests.RequestException as ex:
-            self._raise_exception(ex)
-
-        return TableMeta(meta=response.json())
-
-    def import_emx_file(
-        self,
-        file: Path,
-        action: ImportDataAction,
-        metadata_action: ImportMetadataAction,
-    ):
-        """
-        Imports a file with the Import API.
-        :param file: the Path to the file
-        :param action: the ImportDataAction to use when importing
-        :param metadata_action: the ImportMetadataAction to use when importing
-        """
-        response = self._session.post(
-            self.import_api,
-            headers=self._get_token_header(),
-            files={"file": open(file, "rb")},
-            params={"action": action.value, "metadataAction": metadata_action.value},
-        )
-
-        try:
-            response.raise_for_status()
-        except requests.RequestException as ex:
-            self._raise_exception(ex)
-
-        self._await_import_job(response.text.split("/")[-1])
-
-    def _await_import_job(self, job: str):
-        while True:
-            sleep(5)
-            import_run = self.get_by_id(
-                "sys_ImportRun", job, attributes="status,message"
-            )
-            if import_run["status"] == "FAILED":
-                raise MolgenisImportError(import_run["message"])
-            if import_run["status"] != "RUNNING":
-                return
-
-
-class EricSession(ExtendedSession):
+class EricSession(Session):
     """
     A session with a BBMRI ERIC directory. Contains methods to get national nodes,
     their (staging) data and quality information.
@@ -187,10 +72,13 @@ class EricSession(ExtendedSession):
         :param parent_attr: the name of the attribute that contains the parent relation
         :return: an OntologyTable
         """
-        rows = self.get_uploadable_data(
-            entity_type_id, batch_size=10000, attributes=f"id,{parent_attr},ontology"
+        rows = self.get(
+            entity_type_id,
+            batch_size=10000,
+            attributes=f"id,{parent_attr},ontology",
+            uploadable=True,
         )
-        meta = self.get_meta(entity_type_id)
+        meta = TableMeta(meta=self.get_meta(entity_type_id))
         return OntologyTable.of(meta, rows, parent_attr)
 
     def get_quality_info(self) -> QualityInfo:
@@ -203,24 +91,23 @@ class EricSession(ExtendedSession):
             "eu_bbmri_eric_bio_qual_info",
             batch_size=10000,
             attributes="id,biobank,assess_level_bio",
+            uploadable=True,
         )
         collection_qualities = self.get(
             "eu_bbmri_eric_col_qual_info",
             batch_size=10000,
             attributes="id,collection,assess_level_col",
+            uploadable=True,
         )
-
-        biobanks = utils.to_upload_format(biobank_qualities)
-        collections = utils.to_upload_format(collection_qualities)
 
         bb_qual = defaultdict(list)
         bb_level = defaultdict(list)
         coll_qual = defaultdict(list)
         coll_level = defaultdict(list)
-        for row in biobanks:
+        for row in biobank_qualities:
             bb_qual[row["biobank"]].append(row["id"])
             bb_level[row["biobank"]].append(row["assess_level_bio"])
-        for row in collections:
+        for row in collection_qualities:
             coll_qual[row["collection"]].append(row["id"])
             coll_level[row["collection"]].append(row["assess_level_col"])
 
@@ -318,12 +205,12 @@ class EricSession(ExtendedSession):
         tables = dict()
         for table_type in TableType.get_import_order():
             id_ = node.get_staging_id(table_type)
-            meta = self.get_meta(id_)
+            meta = TableMeta(meta=self.get_meta(id_))
 
             tables[table_type.value] = Table.of(
                 table_type=table_type,
                 meta=meta,
-                rows=self.get_uploadable_data(id_, batch_size=10000),
+                rows=self.get(id_, batch_size=10000, uploadable=True),
             )
 
         return NodeData.from_dict(node=node, source=Source.STAGING, tables=tables)
@@ -340,13 +227,16 @@ class EricSession(ExtendedSession):
         tables = dict()
         for table_type in TableType.get_import_order():
             id_ = table_type.base_id
-            meta = self.get_meta(id_)
+            meta = TableMeta(self.get_meta(id_))
 
             tables[table_type.value] = Table.of(
                 table_type=table_type,
                 meta=meta,
-                rows=self.get_uploadable_data(
-                    id_, batch_size=10000, q=f"national_node=={node.code}"
+                rows=self.get(
+                    id_,
+                    batch_size=10000,
+                    q=f"national_node=={node.code}",
+                    uploadable=True,
                 ),
             )
 
@@ -372,65 +262,42 @@ class EricSession(ExtendedSession):
         tables = dict()
         for table_type in TableType.get_import_order():
             id_ = table_type.base_id
-            meta = self.get_meta(id_)
+            meta = TableMeta(self.get_meta(id_))
             attrs = attributes[table_type.value]
 
             tables[table_type.value] = Table.of(
                 table_type=table_type,
                 meta=meta,
-                rows=self.get_uploadable_data(
+                rows=self.get(
                     id_,
                     batch_size=10000,
                     q=f"national_node=in=({','.join(codes)})",
                     attributes=",".join(attrs),
+                    uploadable=True,
                 ),
             )
 
         return MixedData.from_mixed_dict(source=Source.PUBLISHED, tables=tables)
 
-    def import_as_csv(self, data: EricData):
+    def upload_data(self, data: EricData):
         """
         Converts the five tables of an EricData object to CSV, bundles them in
         a ZIP archive and imports them through the import API.
         :param data: an EricData object
         """
-        with tempfile.TemporaryDirectory() as tmpdir:
-            archive = self._create_emx_archive(data, tmpdir)
-            self.import_emx_file(
-                archive,
-                action=ImportDataAction.ADD_UPDATE_EXISTING,
-                metadata_action=ImportMetadataAction.IGNORE,
-            )
 
-    @classmethod
-    def _create_emx_archive(cls, data: EricData, directory: str) -> Path:
-        archive_name = f"{directory}/archive.zip"
-        with ZipFile(archive_name, "w") as archive:
-            for table in data.import_order:
-                file_name = f"{table.full_name}.csv"
-                file_path = f"{directory}/{file_name}"
-                cls._create_csv(table, file_path)
-                archive.write(file_path, file_name)
-        return Path(archive_name)
+        importable_data = dict()
+        for table in data.import_order:
+            importable_data[table.full_name] = table.rows
 
-    @staticmethod
-    def _create_csv(table: Table, file_name: str):
-        with open(file_name, "w", encoding="utf-8") as fp:
-            writer = csv.DictWriter(
-                fp,
-                fieldnames=table.meta.attributes,
-                quoting=csv.QUOTE_ALL,
-                extrasaction="ignore",
-            )
-            writer.writeheader()
-            for row in table.rows:
-                for key, value in row.items():
-                    if isinstance(value, list):
-                        row[key] = ",".join(value)
-                writer.writerow(row)
+        self.import_data(
+            importable_data,
+            data_action=ImportDataAction.ADD_UPDATE_EXISTING,
+            metadata_action=ImportMetadataAction.IGNORE,
+        )
 
 
-class ExternalServerSession(ExtendedSession):
+class ExternalServerSession(Session):
     """
     A session with a national node's external server (for example BBMRI-NL).
     """
@@ -452,11 +319,11 @@ class ExternalServerSession(ExtendedSession):
             if not self.get("sys_md_EntityType", q=f"id=={id_}"):
                 tables[table_type.value] = Table.of_placeholder(table_type)
             else:
-                meta = self.get_meta(id_)
+                meta = TableMeta(self.get_meta(id_))
                 tables[table_type.value] = Table.of(
                     table_type=table_type,
                     meta=meta,
-                    rows=self.get_uploadable_data(id_, batch_size=10000),
+                    rows=self.get(id_, batch_size=10000, uploadable=True),
                 )
 
         return NodeData.from_dict(

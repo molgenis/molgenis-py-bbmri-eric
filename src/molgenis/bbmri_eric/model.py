@@ -35,24 +35,22 @@ class TableMeta:
     id_attribute: str = field(init=False)
 
     def __post_init__(self):
-        for attribute in self.meta["data"]["attributes"]["items"]:
+        for attribute in self.meta["attributes"]["items"]:
             if attribute["data"]["idAttribute"] is True:
                 object.__setattr__(self, "id_attribute", attribute["data"]["name"])
 
     @property
     def id(self):
-        return self.meta["data"]["id"]
+        return self.meta["id"]
 
     @property
     def attributes(self):
-        return [
-            attr["data"]["name"] for attr in self.meta["data"]["attributes"]["items"]
-        ]
+        return [attr["data"]["name"] for attr in self.meta["attributes"]["items"]]
 
     @property
     def one_to_manys(self) -> List[str]:
         one_to_manys = []
-        for attribute in self.meta["data"]["attributes"]["items"]:
+        for attribute in self.meta["attributes"]["items"]:
             if attribute["data"]["type"] == "onetomany":
                 one_to_manys.append(attribute["data"]["name"])
         return one_to_manys
@@ -98,12 +96,8 @@ class Table(BaseTable):
     @staticmethod
     def of_placeholder(table_type: TableType):
         meta = {
-            "data": {
-                "id": table_type.base_id,
-                "attributes": {
-                    "items": [{"data": {"name": "id", "idAttribute": True}}]
-                },
-            }
+            "id": table_type.base_id,
+            "attributes": {"items": [{"data": {"name": "id", "idAttribute": True}}]},
         }
         return Table.of_empty(
             table_type=table_type,
@@ -277,7 +271,7 @@ class NodeData(EricData):
         tables = dict()
         for table in self.import_order:
             metadata = deepcopy(table.meta.meta)
-            metadata["data"]["id"] = self.node.get_staging_id(table.type)
+            metadata["id"] = self.node.get_staging_id(table.type)
             tables[table.type.value] = Table(
                 table.rows_by_id, TableMeta(metadata), table.type
             )
