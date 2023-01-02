@@ -55,6 +55,14 @@ class TableMeta:
                 one_to_manys.append(attribute["data"]["name"])
         return one_to_manys
 
+    @property
+    def hyperlinks(self) -> List[str]:
+        hyperlinks = []
+        for attribute in self.meta["attributes"]["items"]:
+            if attribute["data"]["type"] == "hyperlink":
+                hyperlinks.append(attribute["data"]["name"])
+        return hyperlinks
+
 
 @dataclass(frozen=True)
 class BaseTable(ABC):

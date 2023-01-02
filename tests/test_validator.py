@@ -53,6 +53,10 @@ def test_validate_id(node_data):
             "eu_bbmri_eric_NL_biobanks does not start with bbmri-eric:ID:NL_"
         ),
         EricWarning(
+            message="Biobank bbmri-eric:ID:NL_valid:biobankID-2 has an invalid url: "
+            "www.invalid@url.nl"
+        ),
+        EricWarning(
             message="bbmri-eric:collection:NL_invalid_collection_classifier in entity: "
             "eu_bbmri_eric_NL_collections does not start with bbmri-eric:ID:NL_"
         ),
