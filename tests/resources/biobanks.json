@@ -6,7 +6,8 @@
         "head_firstname": "Jan",
         "head_lastname": "Janssen",
         "head_role": "Director",
-        "country": "NL"
+        "country": "NL",
+        "url": "https://valid_url.nl"
     },
     {
         "id": "bbmri-eric:ID:NL_valid:biobankID-2",
@@ -16,7 +17,8 @@
         "head_firstname": "Piet",
         "head_lastname": "Geluk",
         "head_role": "Principal Investigator",
-        "country": "NL"
+        "country": "NL",
+        "url": "www.invalid@url.nl"
     },
     {"id": "bbmri-eric:test:NL_invalid_biobank_classifier"},
     {

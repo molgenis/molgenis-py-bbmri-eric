@@ -1,5 +1,6 @@
 # Changelog
 ## Version 1.10.0 (development)
+- Validation of hyperlinks
 
 ## Version 1.9.0
 BBMRI-model changes as described in this [document](https://docs.google.com/document/d/1h-xkU6uR8jytDnMm7wT38bk0ZdmXzywZ/edit?usp=sharing&ouid=103886117563984453369&rtpof=true&sd=true).

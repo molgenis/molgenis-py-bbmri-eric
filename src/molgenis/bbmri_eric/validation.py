@@ -12,9 +12,15 @@ class Validator:
     consists of:
     1. Checking the validity of all identifiers
     2. Checking if there are rows that reference rows with invalid identifiers
+    3. Checking the validity of ages
+    4. Checking the validity of hyperlinks
     """
 
     ALLOWS_EU_PREFIXES = {TableType.PERSONS, TableType.NETWORKS}
+    HYPERLINK_REGEX = (
+        r"^((https?):\/\/)(www.)?[-a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\."
+        r"[a-z]{2,6}\b([-a-zA-Z0-9@:%._\\+~#?&//=]*)\/?$|^$/"
+    )
 
     def __init__(self, node_data: NodeData, printer: Printer):
         self.printer = printer
@@ -25,6 +31,7 @@ class Validator:
     def validate(self) -> List[EricWarning]:
         for table in self.node_data.import_order:
             self._validate_ids(table)
+            self._validate_hyperlinks(table)
 
         self._validate_networks()
         self._validate_biobanks()
@@ -37,6 +44,15 @@ class Validator:
             id_ = row["id"]
             self._validate_id_prefix(id_, table)
             self._validate_id_chars(id_, table)
+
+    def _validate_hyperlinks(self, table: Table):
+        for row in table.rows:
+            for column in list(set(table.meta.hyperlinks).intersection(row.keys())):
+                if not re.match(self.HYPERLINK_REGEX, row[column]):
+                    self._warn(
+                        f"{table.type.value.capitalize()[:-1]} {row['id']} "
+                        f"has an invalid {column}: {row[column]}"
+                    )
 
     def _validate_networks(self):
         for network in self.node_data.networks.rows:

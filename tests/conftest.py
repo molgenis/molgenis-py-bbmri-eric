@@ -49,6 +49,7 @@ def node_data() -> NodeData:
 
     biobanks_meta = MagicMock()
     biobanks_meta.id = "eu_bbmri_eric_NL_biobanks"
+    biobanks_meta.hyperlinks = ["url"]
     biobanks = Table.of(
         TableType.BIOBANKS,
         biobanks_meta,
