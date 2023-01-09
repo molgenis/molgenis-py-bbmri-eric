@@ -1,5 +1,7 @@
 # Changelog
-## Version 1.10.0 (development)
+## Version 1.11.0 (development)
+
+## Version 1.10.0
 - Validation of hyperlinks
 
 ## Version 1.9.0
