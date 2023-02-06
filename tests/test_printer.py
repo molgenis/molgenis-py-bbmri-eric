@@ -50,7 +50,7 @@ def test_reset_indent(capsys):
 
 
 def test_print_node_title(capsys):
-    node = Node("NL", "Netherlands")
+    node = Node("NL", "Netherlands", None)
     expected = textwrap.dedent(
         """\
 
@@ -115,10 +115,10 @@ def test_print_summary(capsys):
         """
     )
 
-    a = Node("A", "success")
-    b = Node("B", "error")
-    c = Node("C", "error and warnings")
-    d = Node("D", "success with warnings")
+    a = Node("A", "success", None)
+    b = Node("B", "error", None)
+    c = Node("C", "error and warnings", None)
+    d = Node("D", "success with warnings", None)
     nodes = [a, b, c, d]
     report = ErrorReport(nodes)
     warning = EricWarning("warning")

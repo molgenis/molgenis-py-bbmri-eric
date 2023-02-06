@@ -42,7 +42,7 @@ def test_table_factory_method():
 
 
 def test_node_staging_id():
-    node = Node("NL", "NL")
+    node = Node("NL", "NL", None)
 
     assert node.get_staging_id(TableType.PERSONS) == "eu_bbmri_eric_NL_persons"
     assert node.get_staging_id(TableType.NETWORKS) == "eu_bbmri_eric_NL_networks"
@@ -51,7 +51,7 @@ def test_node_staging_id():
 
 
 def test_node_id_prefix():
-    node = Node("BE", "BE")
+    node = Node("BE", "BE", None)
 
     assert node.get_id_prefix(TableType.PERSONS) == "bbmri-eric:contactID:BE_"
     assert node.get_id_prefix(TableType.NETWORKS) == "bbmri-eric:networkID:BE_"
@@ -60,7 +60,7 @@ def test_node_id_prefix():
 
 
 def test_node_eu_id_prefix():
-    node = Node("BE", "BE")
+    node = Node("BE", "BE", None)
 
     assert node.get_eu_id_prefix(TableType.PERSONS) == "bbmri-eric:contactID:EU_"
     assert node.get_eu_id_prefix(TableType.NETWORKS) == "bbmri-eric:networkID:EU_"
@@ -69,7 +69,7 @@ def test_node_eu_id_prefix():
 
 
 def test_external_server_node():
-    node = ExternalServerNode("NL", description="NL", url="test.nl")
+    node = ExternalServerNode("NL", description="NL", date_end=None, url="test.nl")
 
     assert node.get_staging_id(TableType.PERSONS) == "eu_bbmri_eric_NL_persons"
     assert node.url == "test.nl"
@@ -81,7 +81,7 @@ def test_node_data_order():
     also_known_in = Table.of(TableType.ALSO_KNOWN, MagicMock(), [{"id": "1"}])
     biobanks = Table.of(TableType.BIOBANKS, MagicMock(), [{"id": "1"}])
     collections = Table.of(TableType.COLLECTIONS, MagicMock(), [{"id": "1"}])
-    node = Node("NL", "NL")
+    node = Node("NL", "NL", None)
 
     node_data = NodeData(
         node=node,
