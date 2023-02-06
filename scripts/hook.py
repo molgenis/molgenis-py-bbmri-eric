@@ -195,14 +195,18 @@ def update_oidc_settings(session: EricSession, logger):
 
     oidc_entity = "sys_sec_oidc_OidcClient"
     oidc_settings = session.get(oidc_entity, uploadable=True)
+    to_be_deleted = []
 
     for oidc in oidc_settings:
         if oidc["registrationId"] == "bbmriEricAAI":
-            oidc["clientId"] = oidc_client_id
-            oidc["clientSecret"] = oidc_client_secret
-            oidc["clientName"] = oidc_client_name
+            oidc["clientName"] = "BBMRI-ERIC AAI - BBMRI-ERIC ACCEPTANCE Catalogue"
+        else:
+            to_be_deleted.append(oidc["registrationId"])
 
     session.update_all(oidc_entity, oidc_settings)
+
+    if to_be_deleted:
+        session.delete_list(oidc_entity, to_be_deleted)
 
 
 def update_negotiator_config(session: EricSession, logger):
@@ -210,14 +214,20 @@ def update_negotiator_config(session: EricSession, logger):
 
     negotiator_entity = "sys_negotiator_NegotiatorConfig"
     negotiator_config = session.get(negotiator_entity, uploadable=True)
+    to_be_deleted = []
 
     for row in negotiator_config:
         if row["id"] == "directory":
             row["negotiator_url"] = negotiator_url
             row["username"] = negotiator_username
             row["password"] = negotiator_password
+        else:
+            to_be_deleted.append(row["id"])
 
     session.update_all(negotiator_entity, negotiator_config)
+
+    if to_be_deleted:
+        session.delete_list(negotiator_entity, to_be_deleted)
 
 
 if __name__ == "__main__":
