@@ -7,7 +7,9 @@ such a way that is safe to use as an acceptance test environment:
 2. Removes production PIDs and replaces them with test PIDs
 3. Disables some scheduled jobs
 4. Removes people from email lists in scheduled jobs (except the support email)
-5. Updates the Google Analytics settings
+5. Updates the OIDC-client settings
+6. Updates the Google Analytics settings
+7. Update the Negotiator URL, username and password
 
 Requires a .env file next to it to configure. Example:
 
@@ -18,6 +20,12 @@ HOOK_PYHANDLE_CREDS_JSON=pyhandle_creds.json
 HOOK_USE_LIVE_PID_SERVICE=True
 HOOK_MOLGENIS_SUPPORT_EMAIL=molgenis-support@umcg.nl
 HOOK_GA_ID=ga_id
+HOOK_OIDC_CLIENT_ID=oidc_client_id
+HOOK_OIDC_CLIENT_SECRET=oidc_client_secret
+HOOK_OIDC_CLIENT_NAME=oidc_client_name
+HOOK_NEGOTIATOR_URL=negotiator_url
+HOOK_NEGOTIATOR_USERNAME=negotiator_username
+HOOK_NEGOTIATOR_PASSWORD=negotiator_password
 
 Setting HOOK_USE_LIVE_PID_SERVICE to False will use the DummyPidService instead, which
 will not create actual handles but will fill the column with fake PIDs.
@@ -41,6 +49,12 @@ pyhandle_creds = config["HOOK_PYHANDLE_CREDS_JSON"]
 use_live_pid_service = config["HOOK_USE_LIVE_PID_SERVICE"].lower() == "true"
 support_email = config["HOOK_MOLGENIS_SUPPORT_EMAIL"]
 ga_id = config["HOOK_GA_ID"]
+oidc_client_id = config["HOOK_OIDC_CLIENT_ID"]
+oidc_client_secret = config["HOOK_OIDC_CLIENT_SECRET"]
+oidc_client_name = config["HOOK_OIDC_CLIENT_NAME"]
+negotiator_url = config["HOOK_NEGOTIATOR_URL"]
+negotiator_username = config["HOOK_NEGOTIATOR_USERNAME"]
+negotiator_password = config["HOOK_NEGOTIATOR_PASSWORD"]
 
 
 def run():
@@ -54,7 +68,9 @@ def run():
     overwrite_pids(session, logger)
     disable_jobs(session, logger)
     remove_job_emails(session, logger)
+    update_oidc_settings(session, logger)
     update_ga_settings(session, logger)
+    update_negotiator_config(session, logger)
 
     logger.info("Finished!")
 
@@ -172,6 +188,36 @@ def update_ga_settings(session: EricSession, logger):
                 "ga_acc_privacy_friendly",
                 ga_acc_privacy_friendly,
             )
+
+
+def update_oidc_settings(session: EricSession, logger):
+    logger.info("Update OIDC client settings")
+
+    oidc_entity = "sys_sec_oidc_OidcClient"
+    oidc_settings = session.get(oidc_entity, uploadable=True)
+
+    for oidc in oidc_settings:
+        if oidc["registrationId"] == "bbmriEricAAI":
+            oidc["clientId"] = oidc_client_id
+            oidc["clientSecret"] = oidc_client_secret
+            oidc["clientName"] = oidc_client_name
+
+    session.update_all(oidc_entity, oidc_settings)
+
+
+def update_negotiator_config(session: EricSession, logger):
+    logger.info("Update Negotiator Config")
+
+    negotiator_entity = "sys_negotiator_NegotiatorConfig"
+    negotiator_config = session.get(negotiator_entity, uploadable=True)
+
+    for row in negotiator_config:
+        if row["id"] == "directory":
+            row["negotiator_url"] = negotiator_url
+            row["username"] = negotiator_username
+            row["password"] = negotiator_password
+
+    session.update_all(negotiator_entity, negotiator_config)
 
 
 if __name__ == "__main__":
