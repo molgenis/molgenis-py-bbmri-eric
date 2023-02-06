@@ -1,6 +1,6 @@
 # Changelog
 ## Version 1.11.0 (development)
-- Add withdrawn column for witdrawn national nodes
+- Add withdrawn column for withdrawn national nodes
 
 ## Version 1.10.0
 - Validation of hyperlinks
