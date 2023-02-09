@@ -1,5 +1,7 @@
 # Changelog
-## Version 1.11.0 (development)
+## Version 1.12.0 (development)
+
+## Version 1.11.0
 - Add withdrawn column for withdrawn national nodes
 
 ## Version 1.10.0
