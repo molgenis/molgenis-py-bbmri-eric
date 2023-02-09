@@ -21,8 +21,8 @@ def test_error():
 
 
 def test_error_report():
-    a = Node("A", "A")
-    b = Node("B", "B")
+    a = Node("A", "A", None)
+    b = Node("B", "B", None)
     report = ErrorReport([a, b])
     warning = EricWarning("warning")
     error = EricError("error")

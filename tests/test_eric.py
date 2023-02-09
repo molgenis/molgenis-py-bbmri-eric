@@ -29,8 +29,8 @@ def eric(session, printer, pid_service) -> Eric:
 def test_stage_external_nodes(eric):
     error = EricError("error")
     eric.stager.stage.side_effect = [None, error]
-    nl = ExternalServerNode("NL", "will succeed", "url.nl")
-    be = ExternalServerNode("BE", "wil fail", "url.be")
+    nl = ExternalServerNode("NL", "will succeed", None, "url.nl")
+    be = ExternalServerNode("BE", "wil fail", None, "url.be")
 
     report = eric.stage_external_nodes([nl, be])
 
@@ -42,7 +42,7 @@ def test_stage_external_nodes(eric):
 
 
 def test_publish_node_staging_fails(eric, session, report_init):
-    nl = ExternalServerNode("NL", "Netherlands", "url")
+    nl = ExternalServerNode("NL", "Netherlands", None, "url")
     state = _setup_state([nl], eric, report_init)
 
     error = EricError("error")
@@ -61,7 +61,7 @@ def test_publish_node_staging_fails(eric, session, report_init):
 
 
 def test_publish_node_prepare_fails(eric, report_init):
-    nl = ExternalServerNode("NL", "Netherlands", "url")
+    nl = ExternalServerNode("NL", "Netherlands", None, "url")
     state = _setup_state([nl], eric, report_init)
 
     error = EricError("error")
@@ -77,8 +77,8 @@ def test_publish_node_prepare_fails(eric, report_init):
 
 
 def test_publish_nodes(eric, report_init):
-    no = Node("NO", "succeeds")
-    nl = ExternalServerNode("NL", "fails during publishing", "url")
+    no = Node("NO", "succeeds", None)
+    nl = ExternalServerNode("NL", "fails during publishing", None, "url")
     state = _setup_state([no, nl], eric, report_init)
 
     error = EricError("error")

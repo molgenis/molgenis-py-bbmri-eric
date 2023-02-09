@@ -1,3 +1,5 @@
+from datetime import date
+
 from molgenis.bbmri_eric.categories import CategoryMapper
 from molgenis.bbmri_eric.errors import EricWarning
 from molgenis.bbmri_eric.model import Node, NodeData, OntologyTable, QualityInfo, Table
@@ -32,15 +34,20 @@ class Transformer:
     def transform(self):
         """
         Transforms the data of a node:
-        1. Sets the commercial use boolean
-        2. Adds the national node code to all rows
-        3. Sets the quality info field for biobanks and collections
-        4. Adds PIDs to biobanks
-        5. Replaces a node's EU rows with the data from node EU's staging area
-        6. Adds the combined networks' ids to collections
-        7. Merges biobank 'covid19biobank' values into 'capabilities'
+        1. Adds the national node code to all rows
+        2. Sets the withdrawn column to True for all rows of a withdrawn national nodes
+        3. Replaces a node's EU rows with the data from node EU's staging area
+        4. Sets the commercial use boolean in collections
+        5. Sets the quality info field for biobanks and collections
+        6. Adds PIDs to biobanks
+        7. Add biobank labels (biobank name) to collections
+        8. Adds the combined networks' ids to collections
+        9. Adds the combined qualities to collections
+        10. Sets the collections' categories
+
         """
         self._set_national_node_code()
+        self._set_withdrawn()
         self._replace_eu_rows()
         self._set_commercial_use_bool()
         self._set_quality_info()
@@ -182,3 +189,16 @@ class Transformer:
         self.printer.print("Setting collection categories")
         for collection in self.node_data.collections.rows:
             collection["categories"] = self.category_mapper.map(collection)
+
+    def _set_withdrawn(self):
+        """
+        Adds withdrawn is True to each row of every table of a node that is withdrawn
+        """
+        self.printer.print("Marking withdrawn national nodes")
+        for table in self.node_data.import_order:
+            if (
+                self.node_data.node.date_end
+                and self.node_data.node.date_end <= date.today().strftime("%Y-%m-%d")
+            ):
+                for row in table.rows:
+                    row["withdrawn"] = True

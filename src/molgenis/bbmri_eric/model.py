@@ -155,6 +155,7 @@ class Node:
 
     code: str
     description: Optional[str]
+    date_end: Optional[str]
 
     _classifiers = {
         TableType.PERSONS: "contactID",
@@ -199,7 +200,7 @@ class Node:
 
     @staticmethod
     def of(code: str):
-        return Node(code, None)
+        return Node(code, None, None)
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Node):

@@ -30,6 +30,29 @@ def test_transformer_node_codes(node_data, transformer):
         assert table.rows[0]["national_node"] == "NL"
 
 
+def test_transformer_not_withdrawn(node_data, transformer):
+    for table in node_data.import_order:
+        assert "withdrawn" not in table.rows[0]
+
+    transformer.node_data = node_data
+    transformer._set_withdrawn()
+
+    for table in node_data.import_order:
+        assert "withdrawn" not in table.rows[0]
+
+
+def test_transformer_withdrawn(node_data, transformer):
+    node_data.node = Node("NL", "NL", "20200101")
+    for table in node_data.import_order:
+        assert "withdrawn" not in table.rows[0]
+
+    transformer.node_data = node_data
+    transformer._set_withdrawn()
+
+    for table in node_data.import_order:
+        assert table.rows[0]["withdrawn"]
+
+
 def test_transformer_commercial_use(transformer):
     node_data = MagicMock()
     node_data.collections.rows = [
@@ -100,7 +123,7 @@ def test_transformer_quality(node_data, transformer):
 
 
 def test_transformer_replace_eu_rows_skip_eu(transformer):
-    eu = Node("EU", "Europe")
+    eu = Node("EU", "Europe", None)
     node_data = MagicMock()
     node_data.node = eu
     transformer.node_data = node_data
@@ -112,8 +135,8 @@ def test_transformer_replace_eu_rows_skip_eu(transformer):
 
 
 def test_transformer_replace_eu_rows(transformer):
-    cy = Node("CY", "Cyprus")
-    eu = Node("EU", "Europe")
+    cy = Node("CY", "Cyprus", None)
+    eu = Node("EU", "Europe", None)
 
     node_data = MagicMock()
     eu_node_data = MagicMock()

@@ -184,12 +184,19 @@ class EricSession(Session):
         result = list()
         for node in nodes:
             if "dns" not in node:
-                result.append(Node(code=node["id"], description=node["description"]))
+                result.append(
+                    Node(
+                        code=node["id"],
+                        description=node["description"],
+                        date_end=node.get("date_end"),
+                    )
+                )
             else:
                 result.append(
                     ExternalServerNode(
                         code=node["id"],
                         description=node["description"],
+                        date_end=node.get("date_end"),
                         url=node["dns"],
                     )
                 )

@@ -23,7 +23,7 @@ def test_stager():
     stager._import_node = MagicMock(name="_import_node")
     stager._get_source_data = MagicMock(name="_get_mock_data")
     stager._get_source_data.return_value = source_data
-    node = ExternalServerNode("NL", "NL", "url")
+    node = ExternalServerNode("NL", "NL", None, "url")
 
     stager.stage(node)
 
@@ -34,7 +34,7 @@ def test_stager():
 
 def test_get_source_data(external_server_init):
     node_data = MagicMock()
-    node = ExternalServerNode("NL", "Netherlands", "url.nl")
+    node = ExternalServerNode("NL", "Netherlands", None, "url.nl")
     source_session_mock_instance = external_server_init.return_value
     source_session_mock_instance.get_node_data.return_value = node_data
 
@@ -45,7 +45,7 @@ def test_get_source_data(external_server_init):
 
 
 def test_check_tables(external_server_init):
-    node = ExternalServerNode("NL", "Netherlands", "url.nl")
+    node = ExternalServerNode("NL", "Netherlands", None, "url.nl")
     session = external_server_init.return_value
     session.get.return_value = []
     session.node = node
@@ -67,7 +67,7 @@ def test_check_tables(external_server_init):
 def test_clear_staging_area():
     session = EricSession("url")
     session.delete = MagicMock(name="delete")
-    node = ExternalServerNode("NL", "Netherlands", "url.nl")
+    node = ExternalServerNode("NL", "Netherlands", None, "url.nl")
 
     Stager(session, Printer())._clear_staging_area(node)
 
