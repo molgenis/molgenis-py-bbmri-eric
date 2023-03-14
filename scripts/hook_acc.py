@@ -199,7 +199,9 @@ def update_oidc_settings(session: EricSession, logger):
 
     for oidc in oidc_settings:
         if oidc["registrationId"] == "bbmriEricAAI":
-            oidc["clientName"] = "BBMRI-ERIC AAI - BBMRI-ERIC ACCEPTANCE Catalogue"
+            oidc["clientName"] = oidc_client_name
+            oidc["clientId"] = oidc_client_id
+            oidc["clientSecret"] = oidc_client_secret
         else:
             to_be_deleted.append(oidc["registrationId"])
 
