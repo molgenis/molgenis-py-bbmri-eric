@@ -37,8 +37,8 @@ def modified_crc_data(entity_type_id: str):
         with printer.indentation():
             printer.print("Modify CRC collections")
             with printer.indentation():
-                printer.print("Replace unknown data_categories by OTHER")
-                for unk_type in [
+                printer.print("Replace unknown Data Category Types by OTHER")
+                for unknown_type in [
                     "WGS",
                     "WES",
                     "MRI",
@@ -59,12 +59,15 @@ def modified_crc_data(entity_type_id: str):
                     "TUMOR_STROMA_RATIO",
                 ]:
                     df_crc["data_categories"] = df_crc["data_categories"].apply(
-                        lambda x: [i.replace(unk_type, "OTHER") for i in x]
-                        if x is not np.nan
-                        else x
+                        lambda categories: [
+                            category.replace(unknown_type, "OTHER")
+                            for category in categories
+                        ]
+                        if categories is not np.nan
+                        else categories
                     )
-                printer.print("Replace unknown materials by OTHER")
-                for unk_type in [
+                printer.print("Replace unknown Materials by OTHER")
+                for unknown_type in [
                     "ASCITES",
                     "BIOPSY",
                     "TISSUE_CRYOPRESERVED",
@@ -79,12 +82,15 @@ def modified_crc_data(entity_type_id: str):
                     "TISSUE FRESH",
                 ]:
                     df_crc["materials"] = df_crc["materials"].apply(
-                        lambda x: [i.replace(unk_type, "OTHER") for i in x]
-                        if x is not np.nan
-                        else x
+                        lambda materials: [
+                            material.replace(unknown_type, "OTHER")
+                            for material in materials
+                        ]
+                        if materials is not np.nan
+                        else materials
                     )
-                printer.print("Replace unknown collection_types by OTHER")
-                for unk_type in [
+                printer.print("Replace unknown Collection Types by OTHER")
+                for unknown_type in [
                     "RCT",
                     "PATIENT_PREFERENCE_STUDY",
                     "gwas",
@@ -98,17 +104,22 @@ def modified_crc_data(entity_type_id: str):
                     "DOSE_ESCALATION_STUDY",
                 ]:
                     df_crc["type"] = df_crc["type"].apply(
-                        lambda x: [i.replace(unk_type, "OTHER") for i in x]
-                        if x is not np.nan
-                        else x
+                        lambda types: [
+                            coll_type.replace(unknown_type, "OTHER")
+                            for coll_type in types
+                        ]
+                        if types is not np.nan
+                        else types
                     )
 
         # Make sure the columns contain a list with unique values
         df_crc["data_categories"] = df_crc["data_categories"].apply(
-            lambda x: list(pd.unique(x))
+            lambda categories: list(pd.unique(categories))
         )
-        df_crc["materials"] = df_crc["materials"].apply(lambda x: list(pd.unique(x)))
-        df_crc["type"] = df_crc["type"].apply(lambda x: list(pd.unique(x)))
+        df_crc["materials"] = df_crc["materials"].apply(
+            lambda materials: list(pd.unique(materials))
+        )
+        df_crc["type"] = df_crc["type"].apply(lambda types: list(pd.unique(types)))
 
     # Turn pd.DataFrame to list of dictionaries
     uploadable_data = df_crc.to_dict("records")
@@ -126,7 +137,7 @@ def modified_crc_data(entity_type_id: str):
 
 
 # Initiate the two sessions
-crc_session = EricSession(url="https://crc.molgeniscloud.org")
+crc_session = EricSession(url="${crc_url}")
 nl_session = EricSession(url="http://localhost:8080", token="${molgenisToken}")
 
 crc = Node("CRC", "CRC", None)
