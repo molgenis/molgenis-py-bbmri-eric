@@ -8,8 +8,8 @@ such a way that is safe to use as an acceptance test environment:
 3. Disables some scheduled jobs
 4. Removes people from email lists in scheduled jobs (except the support email)
 5. Updates the OIDC-client settings
-6. Updates the Google Analytics settings
-7. Update the Negotiator URL, username and password
+6. Removes the Google Analytics settings
+7. Updates the Negotiator URL, username and password
 
 Requires a .env file next to it to configure. Example:
 
@@ -17,9 +17,8 @@ HOOK_OLD_PASSWORD=oldpassword
 HOOK_NEW_PASSWORD=newpassword
 HOOK_SERVER_URL=https://myserver/
 HOOK_PYHANDLE_CREDS_JSON=pyhandle_creds.json
-HOOK_USE_LIVE_PID_SERVICE=True
+HOOK_USE_LIVE_PID_SERVICE=False
 HOOK_MOLGENIS_SUPPORT_EMAIL=molgenis-support@umcg.nl
-HOOK_GA_ID=ga_id
 HOOK_OIDC_CLIENT_ID=oidc_client_id
 HOOK_OIDC_CLIENT_SECRET=oidc_client_secret
 HOOK_OIDC_CLIENT_NAME=oidc_client_name
@@ -48,7 +47,6 @@ url = config["HOOK_SERVER_URL"]
 pyhandle_creds = config["HOOK_PYHANDLE_CREDS_JSON"]
 use_live_pid_service = config["HOOK_USE_LIVE_PID_SERVICE"].lower() == "true"
 support_email = config["HOOK_MOLGENIS_SUPPORT_EMAIL"]
-ga_id = config["HOOK_GA_ID"]
 oidc_client_id = config["HOOK_OIDC_CLIENT_ID"]
 oidc_client_secret = config["HOOK_OIDC_CLIENT_SECRET"]
 oidc_client_name = config["HOOK_OIDC_CLIENT_NAME"]
@@ -162,20 +160,11 @@ def update_ga_settings(session: EricSession, logger):
     settings = session.get(settings_entity)
 
     for setting in settings:
-        ga_acc_privacy_friendly = False
-        tracking_code_footer = f"""</script>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script src="https://www.googletagmanager.com/gtag/js?id={ga_id}"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){{dataLayer.push(arguments);}}
-  gtag('js', new Date());
-
-  gtag('config', '{ga_id}');
-</script>"""
+        ga_acc_privacy_friendly = True
+        tracking_code_footer = ""
 
         if "ga_tracking_id" in setting:
-            session.update_one(settings_entity, setting["id"], "ga_tracking_id", ga_id)
+            session.update_one(settings_entity, setting["id"], "ga_tracking_id", "")
             session.update_one(
                 settings_entity,
                 setting["id"],
@@ -199,7 +188,9 @@ def update_oidc_settings(session: EricSession, logger):
 
     for oidc in oidc_settings:
         if oidc["registrationId"] == "bbmriEricAAI":
-            oidc["clientName"] = "BBMRI-ERIC AAI - BBMRI-ERIC ACCEPTANCE Catalogue"
+            oidc["clientName"] = oidc_client_name
+            oidc["clientId"] = oidc_client_id
+            oidc["clientSecret"] = oidc_client_secret
         else:
             to_be_deleted.append(oidc["registrationId"])
 
