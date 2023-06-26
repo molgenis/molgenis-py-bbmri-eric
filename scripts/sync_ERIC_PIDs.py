@@ -41,7 +41,7 @@ class ExtendedSession(Session):
 
 
 session = ExtendedSession(url="http://localhost:8080", token="${molgenisToken}")
-eric_session = Session(url="https://directory.bbmri-eric.eu")
+eric_session = Session(url="${eric_url}")
 
 biobanks = session.get("eu_bbmri_eric_biobanks", attributes="id", uploadable=True)
 eric_pids = eric_session.get(

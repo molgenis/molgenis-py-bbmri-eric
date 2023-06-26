@@ -13,7 +13,7 @@ tables = {
     "eu_bbmri_eric_collections": ["eu_bbmri_eric_col_qual_info", "collection"],
 }
 session = Session(url="http://localhost:8080", token="${molgenisToken}")
-eric_session = Session(url="https://directory.bbmri-eric.eu")
+eric_session = Session(url="${eric_url}")
 
 for table in tables:
     print(f"Add Qualities to {table}")
