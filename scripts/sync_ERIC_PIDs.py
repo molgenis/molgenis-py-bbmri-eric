@@ -22,7 +22,7 @@ class ExtendedSession(Session):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ExtendedSession, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def update_one_batch(self, entity: str, attribute: str, values: List[dict]):
         """Updates one column in multiple rows."""
