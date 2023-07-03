@@ -18,6 +18,7 @@ def test_table_type_order():
         TableType.ALSO_KNOWN,
         TableType.BIOBANKS,
         TableType.COLLECTIONS,
+        TableType.FACTS,
     ]
 
 
@@ -27,6 +28,7 @@ def test_table_type_base_ids():
     assert TableType.ALSO_KNOWN.base_id == "eu_bbmri_eric_also_known_in"
     assert TableType.BIOBANKS.base_id == "eu_bbmri_eric_biobanks"
     assert TableType.COLLECTIONS.base_id == "eu_bbmri_eric_collections"
+    assert TableType.FACTS.base_id == "eu_bbmri_eric_facts"
 
 
 def test_table_factory_method():
@@ -48,6 +50,7 @@ def test_node_staging_id():
     assert node.get_staging_id(TableType.NETWORKS) == "eu_bbmri_eric_NL_networks"
     assert node.get_staging_id(TableType.BIOBANKS) == "eu_bbmri_eric_NL_biobanks"
     assert node.get_staging_id(TableType.COLLECTIONS) == "eu_bbmri_eric_NL_collections"
+    assert node.get_staging_id(TableType.FACTS) == "eu_bbmri_eric_NL_facts"
 
 
 def test_node_id_prefix():
@@ -57,6 +60,7 @@ def test_node_id_prefix():
     assert node.get_id_prefix(TableType.NETWORKS) == "bbmri-eric:networkID:BE_"
     assert node.get_id_prefix(TableType.BIOBANKS) == "bbmri-eric:ID:BE_"
     assert node.get_id_prefix(TableType.COLLECTIONS) == "bbmri-eric:ID:BE_"
+    assert node.get_id_prefix(TableType.FACTS) == "bbmri-eric:factID:BE_"
 
 
 def test_node_eu_id_prefix():
@@ -66,6 +70,7 @@ def test_node_eu_id_prefix():
     assert node.get_eu_id_prefix(TableType.NETWORKS) == "bbmri-eric:networkID:EU_"
     assert node.get_eu_id_prefix(TableType.BIOBANKS) == "bbmri-eric:ID:EU_"
     assert node.get_eu_id_prefix(TableType.COLLECTIONS) == "bbmri-eric:ID:EU_"
+    assert node.get_eu_id_prefix(TableType.FACTS) == "bbmri-eric:factID:EU_"
 
 
 def test_external_server_node():
@@ -81,6 +86,7 @@ def test_node_data_order():
     also_known_in = Table.of(TableType.ALSO_KNOWN, MagicMock(), [{"id": "1"}])
     biobanks = Table.of(TableType.BIOBANKS, MagicMock(), [{"id": "1"}])
     collections = Table.of(TableType.COLLECTIONS, MagicMock(), [{"id": "1"}])
+    facts = Table.of(TableType.FACTS, MagicMock(), [{"id": "1"}])
     node = Node("NL", "NL", None)
 
     node_data = NodeData(
@@ -91,6 +97,7 @@ def test_node_data_order():
         also_known_in=also_known_in,
         biobanks=biobanks,
         collections=collections,
+        facts=facts,
     )
 
     assert node_data.import_order == [
@@ -99,4 +106,5 @@ def test_node_data_order():
         also_known_in,
         biobanks,
         collections,
+        facts,
     ]

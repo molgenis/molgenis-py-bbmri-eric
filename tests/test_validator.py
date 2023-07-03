@@ -65,6 +65,10 @@ def test_validate_id(node_data):
             "eu_bbmri_eric_NL_collections does not start with bbmri-eric:ID:NL_"
         ),
         EricWarning(
+            message="bbmri-eric:NL_invalid:factsID in entity: "
+            "eu_bbmri_eric_NL_facts does not start with bbmri-eric:factID:NL_"
+        ),
+        EricWarning(
             message="bbmri-eric:networkID:NL_valid:networkID-2 references invalid id: "
             "bbmri-eric:ID:NL_invalid_person_classifier"
         ),

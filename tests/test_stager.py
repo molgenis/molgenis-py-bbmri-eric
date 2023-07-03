@@ -55,13 +55,14 @@ def test_check_tables(external_server_init):
 
     external_server_init.assert_called_with(node=node)
 
-    assert session.get.call_count == 5
+    assert session.get.call_count == 6
 
     assert warnings[0] == EricWarning("Node NL has no persons table")
     assert warnings[1] == EricWarning("Node NL has no networks table")
     assert warnings[2] == EricWarning("Node NL has no also_known_in table")
     assert warnings[3] == EricWarning("Node NL has no biobanks table")
     assert warnings[4] == EricWarning("Node NL has no collections table")
+    assert warnings[5] == EricWarning("Node NL has no facts table")
 
 
 def test_clear_staging_area():
@@ -72,6 +73,7 @@ def test_clear_staging_area():
     Stager(session, Printer())._clear_staging_area(node)
 
     assert session.delete.mock_calls == [
+        mock.call("eu_bbmri_eric_NL_facts"),
         mock.call("eu_bbmri_eric_NL_collections"),
         mock.call("eu_bbmri_eric_NL_biobanks"),
         mock.call("eu_bbmri_eric_NL_also_known_in"),

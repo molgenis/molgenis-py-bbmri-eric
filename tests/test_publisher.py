@@ -41,6 +41,7 @@ def test_publish(publisher, session):
             also_known_in=Table.of_empty(TableType.ALSO_KNOWN, MagicMock()),
             biobanks=Table.of_empty(TableType.BIOBANKS, MagicMock()),
             collections=Table.of_empty(TableType.COLLECTIONS, MagicMock()),
+            facts=Table.of_empty(TableType.FACTS, MagicMock()),
         ),
         eu_node_data=MagicMock(),
         quality_info=MagicMock(),
@@ -52,6 +53,7 @@ def test_publish(publisher, session):
 
     session.upload_data.assert_called_with(state.data_to_publish)
     assert publisher._delete_rows.mock_calls == [
+        mock.call(state.data_to_publish.facts, state.existing_data.facts, state),
         mock.call(
             state.data_to_publish.collections, state.existing_data.collections, state
         ),
