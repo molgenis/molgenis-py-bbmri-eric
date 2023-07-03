@@ -1,5 +1,6 @@
 # Changelog
 ## Version 1.12.0 (development)
+- Include publishing Facts tables
 
 ## Version 1.11.0
 - Add withdrawn column for withdrawn national nodes
