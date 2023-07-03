@@ -91,6 +91,7 @@ class Eric:
                 also_known_in=["id", "national_node"],
                 biobanks=["id", "pid", "name", "national_node"],
                 collections=["id", "national_node"],
+                facts=["id", "national_node"],
             ),
         )
 

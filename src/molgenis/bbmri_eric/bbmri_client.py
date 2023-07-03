@@ -26,6 +26,7 @@ class AttributesRequest:
     also_known_in: List[str]
     biobanks: List[str]
     collections: List[str]
+    facts: List[str]
 
 
 class MolgenisImportError(MolgenisRequestError):
@@ -57,7 +58,7 @@ class EricSession(Session):
     """
 
     def __init__(self, *args, **kwargs):
-        super(EricSession, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     NODES_TABLE = "eu_bbmri_eric_national_nodes"
 
@@ -204,7 +205,7 @@ class EricSession(Session):
 
     def get_staging_node_data(self, node: Node) -> NodeData:
         """
-        Gets the five tables that belong to a single node's staging area.
+        Gets the six tables that belong to a single node's staging area.
 
         :param Node node: the node to get the staging data for
         :return: a NodeData object
@@ -224,7 +225,7 @@ class EricSession(Session):
 
     def get_published_node_data(self, node: Node) -> NodeData:
         """
-        Gets the five tables that belong to a single node from the published tables.
+        Gets the six tables that belong to a single node from the published tables.
         Filters the rows based on the national_node field.
 
         :param Node node: the node to get the published data for
@@ -253,7 +254,7 @@ class EricSession(Session):
         self, nodes: List[Node], attributes: AttributesRequest
     ) -> MixedData:
         """
-        Gets the five tables that belong to one or more nodes from the published tables.
+        Gets the six tables that belong to one or more nodes from the published tables.
         Filters the rows based on the national_node field.
 
         :param List[Node] nodes: the node(s) to get the published data for
@@ -288,7 +289,7 @@ class EricSession(Session):
 
     def upload_data(self, data: EricData):
         """
-        Converts the five tables of an EricData object to CSV, bundles them in
+        Converts the six tables of an EricData object to CSV, bundles them in
         a ZIP archive and imports them through the import API.
         :param data: an EricData object
         """
@@ -310,12 +311,12 @@ class ExternalServerSession(Session):
     """
 
     def __init__(self, node: ExternalServerNode, *args, **kwargs):
-        super(ExternalServerSession, self).__init__(url=node.url, *args, **kwargs)
+        super().__init__(url=node.url, *args, **kwargs)
         self.node = node
 
     def get_node_data(self) -> NodeData:
         """
-        Gets the five tables of this node's external server.
+        Gets the six tables of this node's external server.
 
         :return: a NodeData object
         """

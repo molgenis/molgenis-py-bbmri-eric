@@ -1,17 +1,17 @@
 import json
+from importlib import resources
 from typing import List
 from unittest.mock import MagicMock
 
-import pkg_resources
 import pytest
 
 from molgenis.bbmri_eric.model import Node, NodeData, Source, Table, TableType
 
 
 def get_data(table_type) -> List[dict]:
-    file = open(
-        pkg_resources.resource_filename("tests.resources", table_type + ".json"), "r"
-    )
+    file_name = table_type + ".json"
+    file = open(str(resources.files("tests.resources") / file_name), "r")
+
     data = json.load(file)
     file.close()
     return data
@@ -20,7 +20,7 @@ def get_data(table_type) -> List[dict]:
 @pytest.fixture
 def node_data() -> NodeData:
     """
-    Reads json files with the five data sources and
+    Reads json files with the six data sources and
     returns NodeData to test with.
     """
     persons_meta = MagicMock()
@@ -64,6 +64,14 @@ def node_data() -> NodeData:
         get_data("collections"),
     )
 
+    facts_meta = MagicMock()
+    facts_meta.id = "eu_bbmri_eric_NL_facts"
+    facts = Table.of(
+        TableType.FACTS,
+        facts_meta,
+        get_data("facts"),
+    )
+
     return NodeData.from_dict(
         Node("NL", "NL", None),
         Source.STAGING,
@@ -73,6 +81,7 @@ def node_data() -> NodeData:
             TableType.ALSO_KNOWN.value: also_known,
             TableType.BIOBANKS.value: biobanks,
             TableType.COLLECTIONS.value: collections,
+            TableType.FACTS.value: facts,
         },
     )
 
