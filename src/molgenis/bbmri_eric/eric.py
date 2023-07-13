@@ -102,7 +102,10 @@ class Eric:
         eu_node_data = self.session.get_staging_node_data(self.session.get_node("EU"))
 
         self.printer.print("📦 Retrieving disease ontologies")
-        diseases = self.session.get_ontology("eu_bbmri_eric_disease_types")
+        diseases = self.session.get_ontology(
+            "eu_bbmri_eric_disease_types",
+            matching_attrs=["matching_high", "matching_medium"],
+        )
 
         return PublishingState(
             existing_data=published_data,

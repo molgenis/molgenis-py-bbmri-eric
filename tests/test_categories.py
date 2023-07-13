@@ -25,15 +25,18 @@ def disease_ontology() -> OntologyTable:
                 "id": "urn:miriam:icd:C97",
                 "parentId": "urn:miriam:icd:C00-C97",
                 "ontology": "ICD-10",
+                "matching_high": ["ORPHA:93969"],
             },
             {"id": "urn:miriam:icd:U09"},
             {
                 "id": "urn:miriam:icd:U09.9",
                 "parentId": "urn:miriam:icd:U09",
+                "matching_medium": ["ORPHA:93969"],
             },
             {"id": "ORPHA:93969", "ontology": "orphanet"},
         ],
         "parentId",
+        ["matching_high", "matching_medium"],
     )
 
 
@@ -71,8 +74,14 @@ def test_map_paediatric(mapper, collection: dict, expected: List[str]):
         (dict(), []),
         ({"diagnosis_available": ["urn:miriam:icd:T18.5"]}, []),
         ({"diagnosis_available": ["ORPHA:93969"]}, [Category.RARE_DISEASE.value]),
-        ({"diagnosis_available": ["urn:miriam:icd:C97"]}, [Category.CANCER.value]),
-        ({"diagnosis_available": ["urn:miriam:icd:U09.9"]}, [Category.COVID19.value]),
+        (
+            {"diagnosis_available": ["urn:miriam:icd:C97"]},
+            [Category.RARE_DISEASE.value, Category.CANCER.value],
+        ),
+        (
+            {"diagnosis_available": ["urn:miriam:icd:U09.9"]},
+            [Category.RARE_DISEASE.value, Category.COVID19.value],
+        ),
         (
             {
                 "diagnosis_available": [

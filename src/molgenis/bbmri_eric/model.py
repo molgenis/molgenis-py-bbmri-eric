@@ -122,6 +122,26 @@ class OntologyTable(BaseTable):
     """
 
     parent_attr: str
+    matching_attrs: Optional[List[str]]
+
+    def get_matching_ontologies(self, ontologies: List[str]) -> Set[str]:
+        """
+        Will add matching ontologies with the specified level(s) of confidence to the
+        list of ontologies
+
+        :param ontologies: a list with the current ontologies
+        :return: a list with the current ontologies extended with matching ontologies,
+        if available.
+        """
+        matching_ontologies = []
+        for attr in self.matching_attrs:
+            for ontology in ontologies:
+                try:
+                    matching_ontologies.extend(self.rows_by_id[ontology][attr])
+                except KeyError:
+                    pass
+
+        return set(matching_ontologies)
 
     def is_descendant_of_any(self, descendant_id: str, ancestor_ids: Set[str]) -> bool:
         """
@@ -142,11 +162,16 @@ class OntologyTable(BaseTable):
             current = self.rows_by_id[current[self.parent_attr]]
 
     @staticmethod
-    def of(meta: TableMeta, rows: List[dict], parent_attr: str) -> "OntologyTable":
+    def of(
+        meta: TableMeta, rows: List[dict], parent_attr: str, matching_attrs: List[str]
+    ) -> "OntologyTable":
         """Factory method that takes a list of rows instead of an OrderedDict of
         ids/rows."""
         return OntologyTable(
-            rows_by_id=to_ordered_dict(rows), meta=meta, parent_attr=parent_attr
+            rows_by_id=to_ordered_dict(rows),
+            meta=meta,
+            parent_attr=parent_attr,
+            matching_attrs=matching_attrs,
         )
 
 
