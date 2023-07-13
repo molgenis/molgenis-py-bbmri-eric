@@ -1,6 +1,6 @@
 # Changelog
 ## Version 1.13.0 (development)
-  
+
 ## Version 1.12.0
 - Include publishing of Facts tables
 
