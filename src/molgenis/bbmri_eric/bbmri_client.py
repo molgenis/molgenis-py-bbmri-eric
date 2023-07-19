@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 from molgenis.bbmri_eric.model import (
     EricData,
@@ -65,7 +65,7 @@ class EricSession(Session):
     def get_ontology(
         self,
         entity_type_id: str,
-        matching_attrs: Optional[List[str]] = None,
+        matching_attrs: List[str] | None = None,
         parent_attr: str = "parentId",
     ) -> OntologyTable:
         """
