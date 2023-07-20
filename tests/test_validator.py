@@ -117,10 +117,6 @@ def test_validate_id(node_data):
         (dict(), []),
         ({"id": "0", "age_low": 0, "age_unit": "YEAR"}, []),
         (
-            {"id": "1", "age_low": 0, "age_unit": "YEAR"},
-            [],
-        ),
-        (
             {"id": "2", "age_low": 5},
             [EricWarning("Collection 2 has age_low/age_high without age_unit")],
         ),
