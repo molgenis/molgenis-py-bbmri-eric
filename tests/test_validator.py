@@ -115,17 +115,17 @@ def test_validate_id(node_data):
     "collection,expected",
     [
         (dict(), []),
-        ({"id": "0", "age_low": 0, "age_unit": ["YEAR"]}, []),
+        ({"id": "0", "age_low": 0, "age_unit": "YEAR"}, []),
         (
-            {"id": "1", "age_low": 0, "age_unit": ["YEAR", "MONTH"]},
-            [EricWarning("Collection 1 has more than one age_unit: ['YEAR', 'MONTH']")],
+            {"id": "1", "age_low": 0, "age_unit": "YEAR"},
+            [],
         ),
         (
             {"id": "2", "age_low": 5},
             [EricWarning("Collection 2 has age_low/age_high without age_unit")],
         ),
         (
-            {"id": "3", "age_low": 0, "age_high": 0, "age_unit": ["YEAR"]},
+            {"id": "3", "age_low": 0, "age_high": 0, "age_unit": "YEAR"},
             [
                 EricWarning(
                     "Collection 3 has invalid ages: age_low = 0 and age_high = " "0"
