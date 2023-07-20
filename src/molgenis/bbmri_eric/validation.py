@@ -81,11 +81,6 @@ class Validator:
         high = collection.get("age_high", None)
         unit = collection.get("age_unit", None)
 
-        if unit and len(unit) > 1:
-            self._warn(
-                f"Collection {collection['id']} has more than one age_unit: {unit}"
-            )
-
         if low == 0 and high == 0:
             self._warn(
                 f"Collection {collection['id']} has invalid ages: age_low = 0 and "
