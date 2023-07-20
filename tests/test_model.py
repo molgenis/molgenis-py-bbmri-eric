@@ -87,7 +87,7 @@ def test_node_data_order():
     biobanks = Table.of(TableType.BIOBANKS, MagicMock(), [{"id": "1"}])
     collections = Table.of(TableType.COLLECTIONS, MagicMock(), [{"id": "1"}])
     facts = Table.of(TableType.FACTS, MagicMock(), [{"id": "1"}])
-    node = Node("NL", "NL", None)
+    node = Node("NL", "NL")
 
     node_data = NodeData(
         node=node,

@@ -50,7 +50,7 @@ def test_reset_indent(capsys):
 
 
 def test_print_node_title(capsys):
-    node = Node("NL", "Netherlands", None)
+    node = Node("NL", "Netherlands")
     expected = textwrap.dedent(
         """\
 

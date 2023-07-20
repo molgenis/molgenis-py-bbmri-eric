@@ -1,5 +1,6 @@
 # Changelog
 ## Version 1.13.0 (development)
+- Map matching disease codes to categories
 
 ## Version 1.12.0
 - Include publishing of Facts tables

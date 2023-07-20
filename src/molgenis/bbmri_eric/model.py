@@ -4,7 +4,7 @@ from collections import OrderedDict
 from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 from molgenis.bbmri_eric.utils import to_ordered_dict
 
@@ -122,6 +122,26 @@ class OntologyTable(BaseTable):
     """
 
     parent_attr: str
+    matching_attrs: List[str] | None = None
+
+    def get_matching_ontologies(self, ontologies: List[str]) -> Set[str]:
+        """
+        Will add matching ontologies with the specified level(s) of confidence to the
+        list of ontologies
+
+        :param ontologies: a list with the current ontologies
+        :return: a list with the current ontologies extended with matching ontologies,
+        if available.
+        """
+        matching_ontologies = []
+        for attr in self.matching_attrs:
+            for ontology in ontologies:
+                try:
+                    matching_ontologies.extend(self.rows_by_id[ontology][attr])
+                except KeyError:
+                    pass
+
+        return set(matching_ontologies)
 
     def is_descendant_of_any(self, descendant_id: str, ancestor_ids: Set[str]) -> bool:
         """
@@ -142,11 +162,20 @@ class OntologyTable(BaseTable):
             current = self.rows_by_id[current[self.parent_attr]]
 
     @staticmethod
-    def of(meta: TableMeta, rows: List[dict], parent_attr: str) -> "OntologyTable":
+    def of(
+        meta: TableMeta,
+        rows: List[dict],
+        parent_attr: str,
+        matching_attrs: List[str] | None = None,
+    ) -> "OntologyTable":
         """Factory method that takes a list of rows instead of an OrderedDict of
         ids/rows."""
+        matching_attrs = matching_attrs if matching_attrs else []
         return OntologyTable(
-            rows_by_id=to_ordered_dict(rows), meta=meta, parent_attr=parent_attr
+            rows_by_id=to_ordered_dict(rows),
+            meta=meta,
+            parent_attr=parent_attr,
+            matching_attrs=matching_attrs,
         )
 
 
@@ -155,8 +184,8 @@ class Node:
     """Represents a single national node in the BBMRI ERIC directory."""
 
     code: str
-    description: Optional[str]
-    date_end: Optional[str]
+    description: str | None = None
+    date_end: str | None = None
 
     _classifiers = {
         TableType.PERSONS: "contactID",
@@ -217,7 +246,7 @@ class Node:
 class ExternalServerNode(Node):
     """Represents a node that has an external server on which its data is hosted."""
 
-    url: str
+    url: str | None = None
 
 
 class Source(Enum):

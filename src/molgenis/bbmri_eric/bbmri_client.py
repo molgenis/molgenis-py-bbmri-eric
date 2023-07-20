@@ -65,22 +65,27 @@ class EricSession(Session):
     def get_ontology(
         self,
         entity_type_id: str,
+        matching_attrs: List[str] | None = None,
         parent_attr: str = "parentId",
     ) -> OntologyTable:
         """
         Retrieves an ontology table.
         :param entity_type_id: the identifier of the table
         :param parent_attr: the name of the attribute that contains the parent relation
+        :param matching_attrs: a list with the relevant level or levels of the
+                               "matching" ontology code columns
         :return: an OntologyTable
         """
+        matching_attrs = matching_attrs if matching_attrs else []
+
         rows = self.get(
             entity_type_id,
             batch_size=10000,
-            attributes=f"id,{parent_attr},ontology",
+            attributes=f"id,{parent_attr},ontology,{','.join(matching_attrs)}",
             uploadable=True,
         )
         meta = TableMeta(meta=self.get_meta(entity_type_id))
-        return OntologyTable.of(meta, rows, parent_attr)
+        return OntologyTable.of(meta, rows, parent_attr, matching_attrs)
 
     def get_quality_info(self) -> QualityInfo:
         """

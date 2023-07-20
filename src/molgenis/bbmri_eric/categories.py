@@ -1,3 +1,4 @@
+from copy import deepcopy
 from enum import Enum
 from typing import List, Set
 
@@ -91,8 +92,13 @@ class CategoryMapper:
                 categories.append(Category.PAEDIATRIC_INCLUDED.value)
 
     def _map_diseases(self, collection: dict, categories: List[str]):
-        diagnoses = collection.get("diagnosis_available", [])
+        diagnoses = deepcopy(collection.get("diagnosis_available", []))
         if diagnoses:
+            if self.diseases.matching_attrs:
+                matching_diagnoses = self.diseases.get_matching_ontologies(diagnoses)
+                diagnoses.extend(matching_diagnoses)
+                diagnoses = set(diagnoses)
+
             if self._contains_orphanet(diagnoses):
                 categories.append(Category.RARE_DISEASE.value)
 

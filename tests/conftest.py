@@ -73,7 +73,7 @@ def node_data() -> NodeData:
     )
 
     return NodeData.from_dict(
-        Node("NL", "NL", None),
+        Node("NL", "NL"),
         Source.STAGING,
         {
             TableType.PERSONS.value: persons,
