@@ -1,5 +1,7 @@
 # Changelog
-## Version 1.13.0 (development)
+## Version 1.14.0 (development)
+
+## Version 1.13.0
 - Map matching disease codes to categories
 - Remove check on multiple age_units as datatype has changed to categorical
 
