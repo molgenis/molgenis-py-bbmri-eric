@@ -1,7 +1,7 @@
 # Changelog
 ## Version 1.14.0 (development)
 
-## Version 1.13.1 (development)
+## Version 1.13.1
 - Fix error in staging: Also known in should be emptied after networks and not before
 
 ## Version 1.13.0
