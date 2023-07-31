@@ -13,8 +13,8 @@ class TableType(Enum):
     """Enum representing the six tables each national node has."""
 
     PERSONS = "persons"
-    NETWORKS = "networks"
     ALSO_KNOWN = "also_known_in"
+    NETWORKS = "networks"
     BIOBANKS = "biobanks"
     COLLECTIONS = "collections"
     FACTS = "facts"

@@ -1,6 +1,9 @@
 # Changelog
 ## Version 1.14.0 (development)
 
+## Version 1.13.1 (development)
+- Fix error in staging: Also known in should be emptied after networks and not before
+
 ## Version 1.13.0
 - Map matching disease codes to categories
 - Remove check on multiple age_units as datatype has changed to categorical
