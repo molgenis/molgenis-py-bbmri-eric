@@ -14,8 +14,8 @@ from molgenis.bbmri_eric.model import (
 def test_table_type_order():
     assert TableType.get_import_order() == [
         TableType.PERSONS,
-        TableType.NETWORKS,
         TableType.ALSO_KNOWN,
+        TableType.NETWORKS,
         TableType.BIOBANKS,
         TableType.COLLECTIONS,
         TableType.FACTS,
@@ -24,8 +24,8 @@ def test_table_type_order():
 
 def test_table_type_base_ids():
     assert TableType.PERSONS.base_id == "eu_bbmri_eric_persons"
-    assert TableType.NETWORKS.base_id == "eu_bbmri_eric_networks"
     assert TableType.ALSO_KNOWN.base_id == "eu_bbmri_eric_also_known_in"
+    assert TableType.NETWORKS.base_id == "eu_bbmri_eric_networks"
     assert TableType.BIOBANKS.base_id == "eu_bbmri_eric_biobanks"
     assert TableType.COLLECTIONS.base_id == "eu_bbmri_eric_collections"
     assert TableType.FACTS.base_id == "eu_bbmri_eric_facts"
