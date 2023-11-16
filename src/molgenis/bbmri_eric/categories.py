@@ -68,8 +68,9 @@ class CategoryMapper:
 
         self._map_paediatric(collection, categories)
         self._map_diseases(collection, categories)
+        self._map_collection_types(collection, categories)
 
-        return categories
+        return list(set(categories))
 
     @classmethod
     def _map_paediatric(cls, collection: dict, categories: List[str]):
@@ -90,6 +91,11 @@ class CategoryMapper:
                 categories.append(Category.PAEDIATRIC.value)
             elif low is not None and (low < age_limit):
                 categories.append(Category.PAEDIATRIC_INCLUDED.value)
+
+    @classmethod
+    def _map_collection_types(cls, collection: dict, categories: List[str]):
+        if "RD" in collection.get("type", []):
+            categories.append(Category.RARE_DISEASE.value)
 
     def _map_diseases(self, collection: dict, categories: List[str]):
         diagnoses = deepcopy(collection.get("diagnosis_available", []))

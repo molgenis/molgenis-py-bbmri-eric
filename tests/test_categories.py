@@ -99,3 +99,17 @@ def test_map_diseases(mapper, disease_ontology, collection: dict, expected: List
     categories = []
     mapper._map_diseases(collection, categories)
     assert categories == expected
+
+
+@pytest.mark.parametrize(
+    "collection,expected",
+    [
+        (dict(), []),
+        ({"type": ["DISEASE_SPECIFIC"]}, []),
+        ({"type": ["RD"]}, [Category.RARE_DISEASE.value]),
+    ],
+)
+def test_map_collection_types(mapper, collection: dict, expected: List[str]):
+    categories = []
+    mapper._map_collection_types(collection, categories)
+    assert categories == expected
