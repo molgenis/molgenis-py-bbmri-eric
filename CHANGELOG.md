@@ -1,5 +1,8 @@
 # Changelog
 ## Version 1.14.0 (development)
+- Besides adding the RD category to collections having "ORPHA" diagnosis_available, now
+  also collection having collection type = RD (and no ORPHA or other (than ORPHA)
+  diagnosis_available) get the RD-category assigned.
 
 ## Version 1.13.1
 - Fix error in staging: Also known in should be emptied after networks and not before
