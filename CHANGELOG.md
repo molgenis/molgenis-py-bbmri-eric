@@ -1,5 +1,7 @@
 # Changelog
-## Version 1.14.0 (development)
+## Version 1.15.0 (development)
+
+## Version 1.14.0
 - Besides adding the RD category to collections having "ORPHA" diagnosis_available, now
   also collection having collection type = RD (and no ORPHA or other (than ORPHA)
   diagnosis_available) get the RD-category assigned.
