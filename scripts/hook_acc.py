@@ -86,7 +86,7 @@ def overwrite_pids(session: EricSession, logger):
     logger.info("Making biobanks PID column temporarily editable (readonly=false)")
 
     pid_attr_id = session.get(
-        "sys_md_Attribute", q="name==pid&&entity==eu_bbmri_eric_biobanks"
+        "sys_md_Attribute", q="name==pid;entity==eu_bbmri_eric_biobanks"
     )[0]["id"]
 
     response = session._session.patch(
