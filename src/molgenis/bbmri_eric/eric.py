@@ -104,7 +104,7 @@ class Eric:
         self.printer.print("📦 Retrieving disease ontologies")
         diseases = self.session.get_ontology(
             "eu_bbmri_eric_disease_types",
-            matching_attrs=["matching_high", "matching_medium"],
+            matching_attrs=["exact_mapping", "ntbt_mapping"],
         )
 
         return PublishingState(

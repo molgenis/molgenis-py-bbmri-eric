@@ -25,18 +25,18 @@ def disease_ontology() -> OntologyTable:
                 "id": "urn:miriam:icd:C97",
                 "parentId": "urn:miriam:icd:C00-C97",
                 "ontology": "ICD-10",
-                "matching_high": ["ORPHA:93969"],
+                "exact_mapping": ["ORPHA:93969"],
             },
             {"id": "urn:miriam:icd:U09"},
             {
                 "id": "urn:miriam:icd:U09.9",
                 "parentId": "urn:miriam:icd:U09",
-                "matching_medium": ["ORPHA:93969"],
+                "ntbt_mapping": ["ORPHA:93969"],
             },
             {"id": "ORPHA:93969", "ontology": "orphanet"},
         ],
         "parentId",
-        ["matching_high", "matching_medium"],
+        ["exact_mapping", "ntbt_mapping"],
     )
 
 

@@ -1,5 +1,7 @@
 # Changelog
 ## Version 1.15.0 (development)
+- Columns used for mapping ICD-10 to Orphanet changed from matching_high/medium to
+  exact_mapping and ntbt_mapping.
 
 ## Version 1.14.0
 - Besides adding the RD category to collections having "ORPHA" diagnosis_available, now
