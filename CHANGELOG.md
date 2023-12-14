@@ -1,5 +1,10 @@
 # Changelog
-## Version 1.15.0 (development)
+## Version 1.16.0 (development)
+
+## Version 1.15.1
+- Fix a bug in the derivation of paediatric and paediatric included categories
+
+## Version 1.15.0
 - Columns used for mapping ICD-10 to Orphanet changed from matching_high/medium to
   exact_mapping and ntbt_mapping.
 

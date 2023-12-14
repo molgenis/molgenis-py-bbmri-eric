@@ -75,7 +75,7 @@ class CategoryMapper:
     @classmethod
     def _map_paediatric(cls, collection: dict, categories: List[str]):
         unit = collection.get("age_unit", None)
-        if unit and len(unit) == 1:
+        if unit:
             low = collection.get("age_low", None)
             high = collection.get("age_high", None)
 
@@ -86,7 +86,7 @@ class CategoryMapper:
             ):
                 return
 
-            age_limit = PAEDIATRIC_AGE_LIMIT[AgeUnit[unit[0]]]
+            age_limit = PAEDIATRIC_AGE_LIMIT[AgeUnit[unit]]
             if high is not None and (high < age_limit):
                 categories.append(Category.PAEDIATRIC.value)
             elif low is not None and (low < age_limit):
