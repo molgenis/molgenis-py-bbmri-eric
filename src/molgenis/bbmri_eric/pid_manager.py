@@ -43,6 +43,11 @@ class PidManager(BasePidManager):
                 biobank["pid"] = self._register_biobank_pid(
                     biobank["id"], biobank["name"], warnings
                 )
+                if biobank.get("withdrawn", False):
+                    self.pid_service.set_status(biobank["pid"], Status.WITHDRAWN)
+                    self.printer.print(
+                        f"Set STATUS of {biobank['pid']} to {Status.WITHDRAWN.value}"
+                    )
 
         return warnings
 
@@ -56,6 +61,11 @@ class PidManager(BasePidManager):
             if id_ in existing_biobanks:
                 if biobank["name"] != existing_biobanks.get(biobank["id"])["name"]:
                     self._update_biobank_name(biobank["pid"], biobank["name"])
+                if (
+                    biobank.get("withdrawn", False)
+                    != existing_biobanks.get(biobank["id"])["withdrawn"]
+                ):
+                    self._update_withdrawn_status(biobank["pid"], biobank["withdrawn"])
 
     def terminate_biobanks(self, biobank_pids: List[str]):
         """
@@ -94,6 +104,14 @@ class PidManager(BasePidManager):
     def _update_biobank_name(self, pid: str, name: str):
         self.pid_service.set_name(pid, name)
         self.printer.print(f'Updated NAME of {pid} to "{name}"')
+
+    def _update_withdrawn_status(self, pid: str, withdrawn: bool):
+        if withdrawn:
+            self.pid_service.set_status(pid, Status.WITHDRAWN)
+            self.printer.print(f"Set STATUS of {pid} to {Status.WITHDRAWN.value}")
+        if not withdrawn:
+            self.pid_service.remove_status(pid)
+            self.printer.print(f"Remove WITHDRAWN STATUS of {pid}")
 
 
 class NoOpPidManager(BasePidManager):

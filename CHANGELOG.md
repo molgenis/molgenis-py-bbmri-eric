@@ -1,7 +1,10 @@
 # Changelog
-## Version 1.16.0 (development)
+## Version 1.17.0 (development)
 
-## Version 1.15.1
+## Version 1.16.0
+- Ability to add/remove a WITHDRAWN status to PIDs
+
+## Version 1.15.2
 - Fix a bug in the derivation of paediatric and paediatric included categories
 
 ## Version 1.15.0

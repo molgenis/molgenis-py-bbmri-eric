@@ -19,6 +19,7 @@ from molgenis.bbmri_eric.errors import EricError
 class Status(Enum):
     TERMINATED = "TERMINATED"
     MERGED = "MERGED"
+    WITHDRAWN = "Withdrawn from the BBMRI-ERIC Directory"
 
 
 def pyhandle_error_handler(func):
@@ -58,6 +59,10 @@ class BasePidService(metaclass=ABCMeta):
 
     @abstractmethod
     def set_status(self, pid: str, status: Status):
+        pass
+
+    @abstractmethod
+    def remove_status(self, pid: str):
         pass
 
     @staticmethod
@@ -197,6 +202,9 @@ class DummyPidService(BasePidService):
     def set_status(self, pid: str, status: Status):
         pass
 
+    def remove_status(self, pid: str):
+        pass
+
 
 class NoOpPidService(BasePidService):
     """
@@ -214,4 +222,7 @@ class NoOpPidService(BasePidService):
         pass
 
     def set_status(self, pid: str, status: Status):
+        pass
+
+    def remove_status(self, pid: str):
         pass
