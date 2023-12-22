@@ -89,7 +89,7 @@ class Eric:
                 persons=["id", "national_node"],
                 networks=["id", "national_node"],
                 also_known_in=["id", "national_node"],
-                biobanks=["id", "pid", "name", "national_node"],
+                biobanks=["id", "pid", "name", "national_node", "withdrawn"],
                 collections=["id", "national_node"],
                 facts=["id", "national_node"],
             ),

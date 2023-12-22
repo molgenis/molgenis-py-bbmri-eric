@@ -1,5 +1,5 @@
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -26,14 +26,24 @@ def test_assign_biobank_pids(pid_manager, pid_service):
             {"id": "b1", "name": "biobank1", "pid": "pid1"},
             {"id": "b2", "name": "biobank2"},
             {"id": "b3", "name": "biobank3"},
+            {"id": "b4", "name": "biobank4", "withdrawn": True},
         ],
     )
 
-    pid_service.reverse_lookup.side_effect = [[], ["pid3"]]
+    pid_service.reverse_lookup.side_effect = [[], ["pid3"], []]
+    pid_service.register_pid.return_value = None
 
     warnings = pid_manager.assign_biobank_pids(biobanks)
 
-    pid_service.register_pid.assert_called_with(url="url/#/biobank/b2", name="biobank2")
+    pid_service.register_pid.assert_has_calls(
+        [
+            call(url="url/#/biobank/b2", name="biobank2"),
+            call(url="url/#/biobank/b4", name="biobank4"),
+        ]
+    )
+
+    pid_service.set_status.assert_called_with(None, Status.WITHDRAWN)
+
     assert len(warnings) == 1
     assert (
         warnings[0].message
@@ -49,6 +59,8 @@ def test_update_biobank_pids(pid_manager, pid_service):
         rows=[
             {"id": "b1", "name": "biobank1", "pid": "pid1"},
             {"id": "b2", "name": "biobank2_renamed", "pid": "pid2"},
+            {"id": "b3", "name": "biobank3", "pid": "pid3", "withdrawn": True},
+            {"id": "b4", "name": "biobank4", "pid": "pid4", "withdrawn": False},
         ],
     )
 
@@ -56,14 +68,18 @@ def test_update_biobank_pids(pid_manager, pid_service):
         table_type=TableType.BIOBANKS,
         meta=MagicMock(),
         rows=[
-            {"id": "b1", "name": "biobank1", "pid": "pid1"},
-            {"id": "b2", "name": "biobank2", "pid": "pid2"},
+            {"id": "b1", "name": "biobank1", "pid": "pid1", "withdrawn": False},
+            {"id": "b2", "name": "biobank2", "pid": "pid2", "withdrawn": False},
+            {"id": "b3", "name": "biobank3", "pid": "pid3", "withdrawn": False},
+            {"id": "b4", "name": "biobank4", "pid": "pid4", "withdrawn": True},
         ],
     )
 
     pid_manager.update_biobank_pids(biobanks, existing_biobanks)
 
     pid_service.set_name.assert_called_with("pid2", "biobank2_renamed")
+    pid_service.set_status.assert_called_with("pid3", Status.WITHDRAWN)
+    pid_service.remove_status.assert_called_with("pid4")
 
 
 def test_terminate_biobanks(pid_manager, pid_service):
