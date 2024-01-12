@@ -1,6 +1,9 @@
 # Changelog
 ## Version 1.17.0 (development)
 
+## Version 1.16.1
+- Fix error when deleting biobanks with no PID (issue #68)
+
 ## Version 1.16.0
 - Ability to add/remove a WITHDRAWN status to PIDs
 
