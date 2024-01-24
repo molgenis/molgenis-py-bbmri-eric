@@ -1,5 +1,8 @@
 # Changelog
-## Version 1.17.0 (development)
+## Version 1.18.0 (development)
+
+## Version 1.17.0
+- Get staging data instead of published data from the external servers
 
 ## Version 1.16.1
 - Fix error when deleting biobanks with no PID (issue #68)
