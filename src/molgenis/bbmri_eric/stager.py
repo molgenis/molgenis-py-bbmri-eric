@@ -1,7 +1,7 @@
 from typing import List
 
 from molgenis.bbmri_eric.bbmri_client import EricSession, ExternalServerSession
-from molgenis.bbmri_eric.errors import EricWarning, requests_error_handler
+from molgenis.bbmri_eric.errors import EricError, EricWarning, requests_error_handler
 from molgenis.bbmri_eric.model import ExternalServerNode, NodeData, TableType
 from molgenis.bbmri_eric.printer import Printer
 
@@ -33,19 +33,34 @@ class Stager:
     def _get_source_data(self, node: ExternalServerNode) -> NodeData:
         """
         Gets a node's data from an external server.
-        First check if all tables are available
+        First check if:
+        - the session has the right permissions
+        - and if all tables are available
         """
         self.printer.print(f"📦 Retrieving node's data from {node.url}")
         source_session = ExternalServerSession(node=node)
+        self._check_permissions(source_session)
         self._check_tables(source_session)
         return source_session.get_node_data()
+
+    @staticmethod
+    def _check_permissions(session: ExternalServerSession):
+        """
+        Check if the session has the necessary permissions
+        """
+        package = f"eu_bbmri_eric_{session.node.code}"
+        if not session.get("sys_md_Package", q=f"id=={package}"):
+            raise EricError(
+                "The session user has invalid permissions\n       Please check the "
+                "token and permissions of this user"
+            )
 
     def _check_tables(self, session: ExternalServerSession):
         """
         Check if all tables are available on the external server
         """
         for table_type in TableType.get_import_order():
-            id_ = table_type.base_id
+            id_ = session.node.get_staging_id(table_type)
             if not session.get("sys_md_EntityType", q=f"id=={id_}"):
                 warning = EricWarning(
                     f"Node {session.node.code} has no {table_type.value} table"
