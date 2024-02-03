@@ -3,14 +3,16 @@
 version: 2.1
 
 jobs:
-  build:
+  prepare:
     docker:
       - image: cimg/python:3.10
     steps:
       - checkout
-      - run: python --version
+      - run: pip install tox
+      - run: pip install pre-commit
+      - run: pre-commit install
 
 workflows:
   test-python-jobs:
     jobs:
-      - build
+      - prepare
