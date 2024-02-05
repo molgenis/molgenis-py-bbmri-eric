@@ -10,7 +10,7 @@ executors:
 
 jobs:
   build_and_test:
-    executor: my-executor    
+    executor: my-executor
     steps:
       - checkout
       - run: pip install tox
