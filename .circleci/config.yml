@@ -29,6 +29,7 @@ jobs:
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
           at: ~/repo
+      - run: pip install tox
       - run: tox
       - run: pre-commit run --all-files
 
