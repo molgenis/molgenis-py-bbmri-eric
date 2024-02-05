@@ -11,8 +11,15 @@ jobs:
       - run: pip install tox
       - run: pip install pre-commit
       - run: pre-commit install
+  build:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - run: tox
+      - run: pre-commit run --all-files
 
 workflows:
   test-python-jobs:
     jobs:
       - prepare
+      - build
