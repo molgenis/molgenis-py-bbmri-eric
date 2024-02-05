@@ -25,9 +25,9 @@ jobs:
           - output
   build:
     steps:
-    - attach_workspace:
+      - attach_workspace:
        # Must be absolute path or relative path from working_directory
-       at: /repo/workspace
+        at: /repo/workspace
       - run: tox
       - run: pre-commit run --all-files
 
