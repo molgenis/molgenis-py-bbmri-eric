@@ -9,7 +9,7 @@ executors:
     working_directory: ~/repo
 
 jobs:
-  build_and_test
+  build_and_test:
     executor: my-executor    
     steps:
       - checkout
