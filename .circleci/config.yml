@@ -57,7 +57,8 @@ workflows:
   test-python-jobs:
     jobs:
       - build_and_test
-      - hold:
+      - release2testpypi?:
+          description: Release to testpypi?
           type: approval
           requires:
             - build_and_test
