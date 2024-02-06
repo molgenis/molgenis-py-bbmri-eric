@@ -18,8 +18,52 @@ jobs:
       - run: pre-commit install
       - run: tox
       - run: pre-commit run --all-files
+        # Iets met sonar voor PR:
+        # "sonar-scanner -Dsonar.github.oauth=${env.GITHUB_TOKEN} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${env.CHANGE_ID} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=molgenis/molgenis-py-bbmri-eric"
+        # voor main:
+        # "sonar-scanner"
+
+#  release:
+#    executor: my-executor
+#    steps:
+#      - checkout # checkout source code to working directory
+#      - run:
+#          command: | # create whl, install twine and publish to Test PyPI
+#            python3 setup.py sdist bdist_wheel
+#            sudo add-apt-repository universe -y
+#            sudo apt-get update
+#            sudo apt install -y python3-pip
+#            sudo pip install pipenv
+#            pipenv install twine
+#            pipenv run twine upload --repository testpypi dist/*
+#  pypi_publish:
+#    docker:
+#      - image: cimg/python:3.11.0
+#    steps:
+#      - checkout # checkout source code to working directory
+#      - run:
+#          command: | # create whl, install twine and publish to PyPI
+#            python3 setup.py sdist bdist_wheel
+#            sudo add-apt-repository universe -y
+#            sudo apt-get update
+#            sudo apt install -y python3-pip
+#            sudo pip install pipenv
+#            pipenv install twine
+#            pipenv run twine upload dist/*
+
+
 
 workflows:
   test-python-jobs:
     jobs:
       - build_and_test
+      - hold:
+          type: approval
+          requires:
+            - build_and_test
+#      - release:
+#          requires:
+#            - build_and_test # only deploy if the build_and_test job has completed
+#          filters:
+#            branches:
+#              only: main
