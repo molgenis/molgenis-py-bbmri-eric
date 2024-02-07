@@ -32,13 +32,13 @@ jobs:
       - run: git checkout -f main
       - run: git fetch --tags
       # bump the version based on the last tag and create a new tag
+      - run: RELEASE_SCOPE=patch
       - run:
           command: |
             pip install bumpversion
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
             echo $NEW_PACKAGE_VERSION
       - run: git checkout .
-      - run: RELEASE_SCOPE=patch
       - run: # build and publish the release
           command: |
             tox -e build
