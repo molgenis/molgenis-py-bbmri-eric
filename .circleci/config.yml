@@ -38,10 +38,11 @@ jobs:
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
             echo $NEW_PACKAGE_VERSION
       - run: git checkout .
+      - run: RELEASE_SCOPE = patch
       - run: # build and publish the release
           command: |
             tox -e build
-            tox -e publish -- --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}"
+            tox -e publish -- --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
 
           # push the new tag to molgenis/molgenis-py-bbmri-eric
       # - run: git push --tags origin main
