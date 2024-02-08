@@ -38,6 +38,7 @@ jobs:
           command: |
             pip install bumpversion
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
+            echo 'export NEW_PACKAGE_VERSION' >> "$BASH_ENV"
             echo $NEW_PACKAGE_VERSION
       - run: git checkout .
       - run: # build and publish the release
