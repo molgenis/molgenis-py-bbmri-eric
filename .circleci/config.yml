@@ -43,7 +43,7 @@ jobs:
       - run: # build and publish the release
           command: |
             tox -e build
-            tox -e publish -- --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
+            tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
 
           # push the new tag to molgenis/molgenis-py-bbmri-eric
       # - run: git push --tags origin main
