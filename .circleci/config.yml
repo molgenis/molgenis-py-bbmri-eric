@@ -32,7 +32,8 @@ jobs:
       - run: git checkout -f main
       - run: git fetch --tags
       # bump the version based on the last tag and create a new tag
-      - run: RELEASE_SCOPE=patch
+      - run: echo 'export RELEASE_SCOPE="patch"' >> "$BASH_ENV"
+      - run: echo $RELEASE_SCOPE
       - run:
           command: |
             pip install bumpversion
