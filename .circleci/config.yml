@@ -13,11 +13,17 @@ jobs:
     executor: my-executor
     steps:
       - checkout
-      - run: pip install tox
-      - run: pip install pre-commit
-      - run: pre-commit install
-      - run: tox
-      - run: pre-commit run --all-files
+      - run:
+          name: Run tests
+          command: |
+            pip install tox
+            tox
+      - run:
+          name: Install and run pre-commit
+          command: |
+            pip install pre-commit
+            pre-commit install
+            pre-commit run --all-files
         # Iets met sonar voor PR:
         # "sonar-scanner -Dsonar.github.oauth=${env.GITHUB_TOKEN} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${env.CHANGE_ID} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=molgenis/molgenis-py-bbmri-eric"
         # voor main:
@@ -33,14 +39,15 @@ jobs:
             git config user.email "d.t.roelofs-prins@umcg.nl"
             git config user.name "dtroelofsprins"
       - run: pip install tox
+      - run: echo $GITHUB_TOKEN
       - run: git remote set-url origin https://${GITHUB_TOKEN}@github.com/molgenis/molgenis-py-bbmri-eric.git
       - run: git checkout -f main
       - run: git fetch --tags
-      # bump the version based on the last tag and create a new tag
-      - run: echo 'export RELEASE_SCOPE="patch"' >> "$BASH_ENV"
-      - run: echo $RELEASE_SCOPE
       - run:
+          name: Bump the version based on the last tag and create a new tag
           command: |
+            echo 'export RELEASE_SCOPE="patch"' >> "$BASH_ENV"
+            echo $RELEASE_SCOPE
             pip install bumpversion
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
             echo 'export NEW_PACKAGE_VERSION' >> "$BASH_ENV"
@@ -50,8 +57,8 @@ jobs:
           command: |
             tox -e build
             tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
-
           # push the new tag to molgenis/molgenis-py-bbmri-eric
+          # Maar voor testen even nog niet
       # - run: git push --tags origin main
   release2pypi:
     executor: my-executor
@@ -60,38 +67,39 @@ jobs:
       - run: pip install tox
       # do the actual release to PyPi
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_PASSWORD}
-      - run:
-          name: message slack about release and updated demo server
-          command: |
-            curl -d "token=${SLACK_TOKEN}" \
-            -d "text=molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
-            -d "channel=C01TN8FU480" \
-            -X POST https://slack.com/api/chat.postMessage
+     # - run:
+     #     name: message slack about the release
+     #     command: |
+     #       curl -d "token=${SLACK_TOKEN}" \
+     #       -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
+     #       -d "channel=C01TN8FU480" \
+     #       -X POST https://slack.com/api/chat.postMessage
 
 
 workflows:
   build_pr_or_release:
     jobs:
       - build_and_test
-      - release2testpypi:
-          requires:
-            - build_and_test
-          filters:
-            branches:
-              only: circleci-project-setup
-      - release2pypi?:
+      - release?:
           type: approval
           requires:
             - build_and_test
-            - release2testpypi
           filters:
             branches:
-              only: circleci-project-setup
+              only: circleci-project-setup # moet zijn main (of master), maar voor testen ff zo
+      - release2testpypi:
+          requires:
+            - build_and_test
+            - release?
+          filters:
+            branches:
+              only: circleci-project-setup # moet zijn main (master?), maar voor testen ff zo
+
       - release2pypi:
           requires:
             - build_and_test
+            - release?
             - release2testpypi
-            - release2pypi?
           filters:
             branches:
               only: circleci-project-setup
