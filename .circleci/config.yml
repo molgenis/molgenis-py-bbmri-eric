@@ -85,6 +85,7 @@ workflows:
           requires:
             - build_and_test
             - release2testpypi
+            - release2pypi?
           filters:
             branches:
               only: circleci-project-setup
