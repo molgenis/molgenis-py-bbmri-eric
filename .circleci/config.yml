@@ -98,7 +98,7 @@ workflows:
   build_and_test:
     when:
       and:
-        - equal [false, << pipeline.parameters.release >>]
+        - equal [true, <<pipeline.parameters.release>>]
     jobs:
       - run_tests
   release:
