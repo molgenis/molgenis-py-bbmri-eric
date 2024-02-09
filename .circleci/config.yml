@@ -94,7 +94,7 @@ jobs:
 
 
 workflows:
-  test:
+  build_and_test:
     jobs:
       - run_tests
   release:
