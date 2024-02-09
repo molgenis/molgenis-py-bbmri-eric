@@ -2,6 +2,14 @@
 # See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
+parameters:
+  release:
+    type: boolean
+    default: false
+  release_scope:
+    type: string
+    default: chore
+
 executors:
   my-executor:
     docker:
@@ -9,7 +17,7 @@ executors:
     working_directory: ~/repo
 
 jobs:
-  build_and_test:
+  run_tests:
     executor: my-executor
     steps:
       - checkout
@@ -24,12 +32,19 @@ jobs:
             pip install pre-commit
             pre-commit install
             pre-commit run --all-files
-        # Iets met sonar voor PR:
-        # "sonar-scanner -Dsonar.github.oauth=${env.GITHUB_TOKEN} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${env.CHANGE_ID} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=molgenis/molgenis-py-bbmri-eric"
-        # voor main:
-        # "sonar-scanner"
-
-  release2testpypi:
+      - run:
+          name: sonar
+          command: |
+            if [ -n "$CIRCLE_PULL_REQUEST" ]; then
+              echo "SONAR FOR PR"
+            else
+              echo "SONAR FOR MAIN"
+            fi
+          # Iets met sonar voor PR:
+          # "sonar-scanner -Dsonar.github.oauth=${env.GITHUB_TOKEN} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${env.CHANGE_ID} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=molgenis/molgenis-py-bbmri-eric"
+            # voor main:
+          # "sonar-scanner"
+  release:
     executor: my-executor
     steps:
       - checkout
@@ -46,7 +61,7 @@ jobs:
       - run:
           name: Bump the version based on the last tag and create a new tag
           command: |
-            echo 'export RELEASE_SCOPE="patch"' >> "$BASH_ENV"
+            echo 'export RELEASE_SCOPE=<< pipeline.parameters.release_scope >>' >> "$BASH_ENV"
             echo $RELEASE_SCOPE
             pip install bumpversion
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
@@ -57,6 +72,7 @@ jobs:
           command: |
             tox -e build
             tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
+          # Voor testen even --skip-existing toegevoegd
           # push the new tag to molgenis/molgenis-py-bbmri-eric
           # Maar voor testen even nog niet
       # - run: git push --tags origin main
@@ -66,6 +82,7 @@ jobs:
       - checkout
       - run: pip install tox
       # do the actual release to PyPi
+      # Maar gaat waarschijnlijk niet goed omdat het een andere env is. Iets met workspace doen?
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_PASSWORD}
      # - run:
      #     name: message slack about the release
@@ -79,27 +96,42 @@ jobs:
 workflows:
   build_pr_or_release:
     jobs:
-      - build_and_test
-      - release?:
-          type: approval
-          requires:
-            - build_and_test
-          filters:
-            branches:
-              only: circleci-project-setup # moet zijn main (of master), maar voor testen ff zo
-      - release2testpypi:
+      - run_tests
+      - release:
           requires:
             - build_and_test
             - release?
           filters:
             branches:
               only: circleci-project-setup # moet zijn main (master?), maar voor testen ff zo
-
+          when:
+            or:
+              - equal: [ patch, <<pipeline.parameters.release_scope>> ]
+              - equal: [ minor, <<pipeline.parameters.release_scope>> ]
+              - equal: [ major, <<pipeline.parameters.release_scope>> ]
+      - release2pypi?:
+          type: approval
+          requires:
+            - build_and_test
+            - release
+          filters:
+            branches:
+              only: circleci-project-setup # moet zijn main (of master), maar voor testen ff zo
+          when:
+            or:
+              - equal: [ patch, <<pipeline.parameters.release_scope>> ]
+              - equal: [ minor, <<pipeline.parameters.release_scope>> ]
+              - equal: [ major, <<pipeline.parameters.release_scope>> ]
       - release2pypi:
           requires:
             - build_and_test
-            - release?
-            - release2testpypi
+            - release
+            - release2pypi?
           filters:
             branches:
               only: circleci-project-setup
+          when:
+            or:
+              - equal: [ patch, <<pipeline.parameters.release_scope>> ]
+              - equal: [ minor, <<pipeline.parameters.release_scope>> ]
+              - equal: [ major, <<pipeline.parameters.release_scope>> ]
