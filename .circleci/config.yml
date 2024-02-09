@@ -44,7 +44,7 @@ jobs:
           # "sonar-scanner -Dsonar.github.oauth=${env.GITHUB_TOKEN} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${env.CHANGE_ID} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=molgenis/molgenis-py-bbmri-eric"
             # voor main:
           # "sonar-scanner"
-  release:
+  release2testpypi:
     executor: my-executor
     steps:
       - checkout
@@ -94,44 +94,35 @@ jobs:
 
 
 workflows:
-  build_pr_or_release:
+  run_tests:
     jobs:
       - run_tests
-      - release:
-          requires:
-            - build_and_test
-            - release?
-          filters:
-            branches:
-              only: circleci-project-setup # moet zijn main (master?), maar voor testen ff zo
-          when:
-            or:
-              - equal: [ patch, <<pipeline.parameters.release_scope>> ]
-              - equal: [ minor, <<pipeline.parameters.release_scope>> ]
-              - equal: [ major, <<pipeline.parameters.release_scope>> ]
-      - release2pypi?:
-          type: approval
-          requires:
-            - build_and_test
-            - release
-          filters:
-            branches:
-              only: circleci-project-setup # moet zijn main (of master), maar voor testen ff zo
-          when:
-            or:
-              - equal: [ patch, <<pipeline.parameters.release_scope>> ]
-              - equal: [ minor, <<pipeline.parameters.release_scope>> ]
-              - equal: [ major, <<pipeline.parameters.release_scope>> ]
-      - release2pypi:
-          requires:
-            - build_and_test
-            - release
-            - release2pypi?
-          filters:
-            branches:
-              only: circleci-project-setup
-          when:
-            or:
-              - equal: [ patch, <<pipeline.parameters.release_scope>> ]
-              - equal: [ minor, <<pipeline.parameters.release_scope>> ]
-              - equal: [ major, <<pipeline.parameters.release_scope>> ]
+  release:
+    when:
+      or:
+        - equal: [ patch, <<pipeline.parameters.release_scope>> ]
+        - equal: [ minor, <<pipeline.parameters.release_scope>> ]
+        - equal: [ major, <<pipeline.parameters.release_scope>> ]
+    jobs:
+    - release2testpypi:
+        requires:
+          - run_tests
+        filters:
+          branches:
+            only: circleci-project-setup # moet zijn main (master?), maar voor testen ff zo
+    - release2pypi?:
+        type: approval
+        requires:
+          - run_tests
+          - release2testpypi
+        filters:
+          branches:
+            only: circleci-project-setup # moet zijn main (of master), maar voor testen ff zo
+    - release2pypi:
+        requires:
+          - run_tests
+          - release2testpypi
+          - release2pypi?
+        filters:
+          branches:
+            only: circleci-project-setup
