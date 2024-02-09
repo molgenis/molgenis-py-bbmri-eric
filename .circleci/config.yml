@@ -98,11 +98,7 @@ workflows:
     jobs:
       - run_tests
   release:
-    when:
-      or:
-        - equal: [ patch, <<pipeline.parameters.release_scope>> ]
-        - equal: [ minor, <<pipeline.parameters.release_scope>> ]
-        - equal: [ major, <<pipeline.parameters.release_scope>> ]
+    when: << pipeline.parameters.release >>
     jobs:
     - release2testpypi:
         requires:
