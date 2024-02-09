@@ -17,7 +17,7 @@ executors:
     working_directory: ~/repo
 
 jobs:
-  run_tests:
+  tests:
     executor: my-executor
     steps:
       - checkout
@@ -94,7 +94,7 @@ jobs:
 
 
 workflows:
-  run_tests:
+  test:
     jobs:
       - run_tests
   release:
