@@ -95,30 +95,34 @@ jobs:
 
 workflows:
   build_and_test:
+    when:
+      and:
+        - equal [false, << pipeline.parameters.release >>]
     jobs:
       - run_tests
   release:
     when: << pipeline.parameters.release >>
     jobs:
-    - release2testpypi:
-        requires:
-          - run_tests
-        filters:
-          branches:
-            only: circleci-project-setup # moet zijn main (master?), maar voor testen ff zo
-    - release2pypi?:
-        type: approval
-        requires:
-          - run_tests
-          - release2testpypi
-        filters:
-          branches:
-            only: circleci-project-setup # moet zijn main (of master), maar voor testen ff zo
-    - release2pypi:
-        requires:
-          - run_tests
-          - release2testpypi
-          - release2pypi?
-        filters:
-          branches:
-            only: circleci-project-setup
+      - run_tests
+      - release2testpypi:
+          requires:
+            - run_tests
+          filters:
+            branches:
+              only: circleci-project-setup # moet zijn main (master?), maar voor testen ff zo
+      - release2pypi?:
+          type: approval
+          requires:
+            - run_tests
+            - release2testpypi
+          filters:
+            branches:
+              only: circleci-project-setup # moet zijn main (of master), maar voor testen ff zo
+      - release2pypi:
+          requires:
+            - run_tests
+            - release2testpypi
+            - release2pypi?
+          filters:
+            branches:
+              only: circleci-project-setup
