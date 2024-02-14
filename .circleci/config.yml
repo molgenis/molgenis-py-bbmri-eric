@@ -2,6 +2,9 @@
 # See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
+orbs:
+  sonarqube: clicklogiq/sonarqube@1.0.1
+
 parameters:
   release:
     type: boolean
@@ -85,13 +88,14 @@ jobs:
       # do the actual release to PyPi
       # Maar gaat waarschijnlijk niet goed omdat het een andere env is. Iets met workspace doen?
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_PASSWORD}
-     # - run:
-     #     name: message slack about the release
-     #     command: |
-     #       curl -d "token=${SLACK_TOKEN}" \
-     #       -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
-     #       -d "channel=C01TN8FU480" \
-     #       -X POST https://slack.com/api/chat.postMessage
+      - run: tox -e publish -- --repository testpypi --skip-existing --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_PASSWORD}
+      - run:
+          name: message slack about the release
+          command: |
+            curl -d "token=${SLACK_TOKEN}" \
+            -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
+            -d "channel=C01TN8FU480" \
+            -X POST https://slack.com/api/chat.postMessage
 
 
 workflows:
