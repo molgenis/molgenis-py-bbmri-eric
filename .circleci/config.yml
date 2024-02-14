@@ -91,7 +91,7 @@ jobs:
       # do the actual release to PyPi
       # Maar gaat waarschijnlijk niet goed omdat het een andere env is. Iets met workspace doen?
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_PASSWORD}
-      - run: tox -e publish -- --repository testpypi --skip-existing --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_PASSWORD}
+      - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
       - run:
           name: message slack about the release
           command: |
