@@ -78,6 +78,7 @@ jobs:
           root: .
           paths:
             - .
+            - bash.env
           # Voor testen even --skip-existing toegevoegd
           # push the new tag to molgenis/molgenis-py-bbmri-eric
           # Maar voor testen even nog niet
