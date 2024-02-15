@@ -63,11 +63,11 @@ jobs:
           name: Bump the version based on the last tag and create a new tag
           command: |
             echo 'export RELEASE_SCOPE=<< pipeline.parameters.release_scope >>' >> "$BASH_ENV"
-            echo $RELEASE_SCOPE
+            echo release_scope is $RELEASE_SCOPE
             pip install bumpversion
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
             echo 'export NEW_PACKAGE_VERSION' >> "$BASH_ENV"
-            echo $NEW_PACKAGE_VERSION
+            echo \n new version is $NEW_PACKAGE_VERSION
       - run: git checkout .
       - run: # build and publish the release
           command: |
@@ -94,7 +94,7 @@ jobs:
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
       - run: cat bash.env >> $BASH_ENV
-      - run: echo $NEW_PACKAGE_VERSION
+      - run: echo in release new version is $NEW_PACKAGE_VERSION
  #     - run:
  #         name: message slack about the release
  #         command: |
