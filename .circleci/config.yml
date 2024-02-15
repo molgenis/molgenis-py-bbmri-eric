@@ -67,18 +67,17 @@ jobs:
             pip install bumpversion
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
             echo 'export NEW_PACKAGE_VERSION' >> "$BASH_ENV"
-            echo '\n new version is ${NEW_PACKAGE_VERSION}'
+            echo new version is $NEW_PACKAGE_VERSION
       - run: git checkout .
       - run: # build and publish the release
           command: |
             tox -e build
             tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
-      - run: cp $BASH_ENV bash.env
+      - run: cp $BASH_ENV ~repo/bash.env
       - persist_to_workspace:
           root: .
           paths:
             -  .
-            - bash.env
           # Voor testen even --skip-existing toegevoegd
           # push the new tag to molgenis/molgenis-py-bbmri-eric
           # Maar voor testen even nog niet
@@ -89,7 +88,7 @@ jobs:
       - checkout
       - run: pip install tox
       - attach_workspace:
-          at: .
+          at: ~/repo
       # do the actual release to PyPi
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
