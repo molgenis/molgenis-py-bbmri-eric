@@ -65,7 +65,8 @@ jobs:
             echo release scope is << pipeline.parameters.release_scope >>
             echo 'export RELEASE_SCOPE=<< pipeline.parameters.release_scope >>' >> "$BASH_ENV"
             pip install bumpversion
-            echo 'export NEW_PACKAGE_VERSION=$(bash bump-version.sh)' >> "$BASH_ENV"
+            NEW_PACKAGE_VERSION=$(bash bump-version.sh)
+            echo "export NEW_PACKAGE_VERSION=$NEW_PACKAGE_VERSION" >> "$BASH_ENV"
             echo new version is $NEW_PACKAGE_VERSION
       - run: git checkout .
       - run: # build and publish the release
@@ -98,10 +99,10 @@ jobs:
       - run:
           command: |
             echo scope is $RELEASE_SCOPE
-            echo $NEW_PACKAGE_VERSION
+            echo $NEW_VERSION
             TEST=hoi
             echo $TEST
-      - run: echo in release new version is $NEW_PACKAGE_VERSION
+      - run: echo in release new version is $NEW_VERSION
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
  #     - run:
  #         name: message slack about the release
