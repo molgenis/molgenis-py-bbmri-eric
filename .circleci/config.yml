@@ -73,12 +73,8 @@ jobs:
             tox -e build
             tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
           # Voor testen even --skip-existing toegevoegd
-          # push the new tag to molgenis/molgenis-py-bbmri-eric
-      - run:
-          name: Update tags
-          command: |
-            git checkout main
-            git push --tags origin main
+          # Met PR werkt pushen van tag niet
+#      - run: git push --tags origin main
       - run: cp $BASH_ENV bash.env
       - persist_to_workspace:
           root: ~/repo
@@ -92,16 +88,16 @@ jobs:
       - attach_workspace:
           at: ~/repo
       # do the actual release to PyPi
-      # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
       - run: cat bash.env >> $BASH_ENV
-      - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
+      - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
       - run:
           name: Message slack about the release
           command: |
             curl -d "token=${SLACK_TOKEN}" \
-            -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
+            -d "text= TEST-TEST-TEST-TEST RELEASE molgenis-py-bbmri-eric TO PYPI" \
             -d "channel=C013UDLKFEW" \
             -X POST https://slack.com/api/chat.postMessage
+      #      -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
 
 workflows:
   build_and_test:
