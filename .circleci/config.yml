@@ -71,9 +71,9 @@ jobs:
           name: Build and publish the release to testpypi
           command: |
             tox -e build
-            tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
-          # Voor testen even --skip-existing toegevoegd
-          # Met PR werkt pushen van tag niet
+            tox -e publish -- --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
+          # Voor testen --skip-existing toegevoegd
+          # Met PR werkt pushen van tags niet, even afwachten of met main goed gaat
 #      - run: git push --tags origin main
       - run: cp $BASH_ENV bash.env
       - persist_to_workspace:
@@ -87,17 +87,15 @@ jobs:
       - run: pip install tox
       - attach_workspace:
           at: ~/repo
-      # do the actual release to PyPi
-      - run: cat bash.env >> $BASH_ENV
       - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
+      - run: cat bash.env >> $BASH_ENV
       - run:
           name: Message slack about the release
           command: |
             curl -d "token=${SLACK_TOKEN}" \
-            -d "text= TEST-TEST-TEST-TEST RELEASE molgenis-py-bbmri-eric TO PYPI" \
+            -d "text=molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
             -d "channel=C013UDLKFEW" \
             -X POST https://slack.com/api/chat.postMessage
-      #      -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
 
 workflows:
   build_and_test:
@@ -115,7 +113,7 @@ workflows:
             - run_tests
           filters:
             branches:
-              only: circleci-project-setup # moet zijn main, maar voor testen ff zo
+              only: main
       - release2pypi?:
           type: approval
           requires:
@@ -123,7 +121,7 @@ workflows:
             - release2testpypi
           filters:
             branches:
-              only: circleci-project-setup # moet zijn main, maar voor testen ff zo
+              only: main
       - release2pypi:
           requires:
             - run_tests
@@ -131,4 +129,4 @@ workflows:
             - release2pypi?
           filters:
             branches:
-              only: circleci-project-setup
+              only: main
