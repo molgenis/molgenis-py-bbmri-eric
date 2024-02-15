@@ -93,6 +93,8 @@ jobs:
           at: ~/repo
       # do the actual release to PyPi
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
+      - run: ls -l
+      - run: cat workspace/bash.env
       - run: cat workspace/bash.env >> $BASH_ENV
       - run:
           command: |
