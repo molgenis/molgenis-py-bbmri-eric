@@ -77,8 +77,7 @@ jobs:
       - run:
           name: Update tags
           command: |
-            git config user.email "d.t.roelofs-prins@umcg.nl"
-            git config user.name "dtroelofsprins"
+            git checkout main
             git push --tags origin main
       - run: cp $BASH_ENV bash.env
       - persist_to_workspace:
