@@ -73,7 +73,7 @@ jobs:
           command: |
             tox -e build
             tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
-      - run: cp $BASH_ENV ~repo/bash.env
+      - run: cp $BASH_ENV bash.env
       - persist_to_workspace:
           root: .
           paths:
