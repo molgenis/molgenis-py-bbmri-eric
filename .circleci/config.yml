@@ -5,10 +5,10 @@ version: 2.1
 parameters:
   release:
     type: boolean
-    default: true
+    default: false
   release_scope:
     type: string
-    default: patch
+    default: chore
 
 executors:
   my-executor:
@@ -78,11 +78,9 @@ jobs:
           root: ~/repo
           paths:
             -  .
-          #  -  workspace/bash.env
           # Voor testen even --skip-existing toegevoegd
           # push the new tag to molgenis/molgenis-py-bbmri-eric
-          # Maar voor testen even nog niet
-      # - run: git push --tags origin main
+      - run: git push --tags origin main
   release2pypi:
     executor: my-executor
     steps:
@@ -93,15 +91,14 @@ jobs:
       # do the actual release to PyPi
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
       - run: cat bash.env >> $BASH_ENV
-      - run: echo $NEW_PACKAGE_VERSION
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
-  #    - run:
-  #        name: message slack about the release
-  #        command: |
-  #          curl -d "token=${SLACK_TOKEN}" \
-  ##          -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
-   #         -d "channel=C01TN8FU480" \
-   #         -X POST https://slack.com/api/chat.postMessage
+      - run:
+          name: Message slack about the release
+          command: |
+            curl -d "token=${SLACK_TOKEN}" \
+            -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
+            -d "channel=C013UDLKFEW" \
+            -X POST https://slack.com/api/chat.postMessage
 
 workflows:
   build_and_test:
