@@ -66,7 +66,7 @@ jobs:
             echo 'export RELEASE_SCOPE=<< pipeline.parameters.release_scope >>' >> "$BASH_ENV"
             pip install bumpversion
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
-            echo 'export NEW_PACKAGE_VERSION' >> "$BASH_ENV"
+            echo 'export NEW_PACKAGE_VERSION=$NEW_PACKAGE_VERSION' >> "$BASH_ENV"
             echo new version is $NEW_PACKAGE_VERSION
       - run: git checkout .
       - run: # build and publish the release
