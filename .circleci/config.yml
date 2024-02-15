@@ -89,7 +89,7 @@ jobs:
       - checkout
       - run: pip install tox
       - attach_workspace:
-          at: ~/repo
+          at: .
       # do the actual release to PyPi
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
