@@ -73,11 +73,10 @@ jobs:
           command: |
             tox -e build
             tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
-      - run: cp $"BASH_ENV" bash.env
+      - run: cp $BASH_ENV bash.env
       - persist_to_workspace:
           root: .
           paths:
-            - .
             - bash.env
           # Voor testen even --skip-existing toegevoegd
           # push the new tag to molgenis/molgenis-py-bbmri-eric
