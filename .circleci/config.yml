@@ -99,10 +99,10 @@ jobs:
       - run:
           command: |
             echo scope is $RELEASE_SCOPE
-            echo $NEW_VERSION
+            echo $NEW_PACKAGE_VERSION
             TEST=hoi
             echo $TEST
-      - run: echo in release new version is $NEW_VERSION
+      - run: echo in release new version is $NEW_PACKAGE_VERSION
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
  #     - run:
  #         name: message slack about the release
