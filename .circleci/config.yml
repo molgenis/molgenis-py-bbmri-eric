@@ -98,8 +98,9 @@ jobs:
       - run: cat workspace/bash.env >> $BASH_ENV
       - run:
           command: |
+            echo scope is $RELEASE_SCOPE
             echo $NEW_PACKAGE_VERSION
-            TEST=$NEW_PACKAGE_VERSION
+            TEST=hoi
             echo $TEST
       - run: echo in release new version is $NEW_PACKAGE_VERSION
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
