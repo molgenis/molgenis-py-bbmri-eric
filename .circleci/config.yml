@@ -72,15 +72,19 @@ jobs:
           command: |
             tox -e build
             tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
-    #  - run: mkdir -p workspace
+          # Voor testen even --skip-existing toegevoegd
+          # push the new tag to molgenis/molgenis-py-bbmri-eric
+      - run:
+          name: Update tags
+          command: |
+            git config user.email "d.t.roelofs-prins@umcg.nl"
+            git config user.name "dtroelofsprins"
+            git push --tags origin main
       - run: cp $BASH_ENV bash.env
       - persist_to_workspace:
           root: ~/repo
           paths:
             -  .
-          # Voor testen even --skip-existing toegevoegd
-          # push the new tag to molgenis/molgenis-py-bbmri-eric
-      - run: git push --tags origin main
   release2pypi:
     executor: my-executor
     steps:
