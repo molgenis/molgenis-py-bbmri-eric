@@ -21,7 +21,6 @@ jobs:
     executor: my-executor
     steps:
       - checkout
-      - run: echo << pipeline.parameters.release >>
       - run:
           name: Run tests
           command: |
@@ -41,9 +40,9 @@ jobs:
             else
               echo "SONAR FOR MAIN"
             fi
-          # Iets met sonar voor PR:
+          # Actual sonar-scanner still needs to be implemented:
           # "sonar-scanner -Dsonar.github.oauth=${env.GITHUB_TOKEN} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${env.CHANGE_ID} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=molgenis/molgenis-py-bbmri-eric"
-            # voor main:
+            # for main:
           # "sonar-scanner"
   release2testpypi:
     executor: my-executor
@@ -56,7 +55,7 @@ jobs:
             git config user.name "dtroelofsprins"
       - run: pip install tox
       - run: echo $GITHUB_TOKEN
-      - run: git remote set-url origin https://${GITHUB_TOKEN}@github.com/molgenis/molgenis-py-bbmri-eric.git
+ #     - run: git remote set-url origin https://${GITHUB_TOKEN}@github.com/molgenis/molgenis-py-bbmri-eric.git
       - run: git checkout -f main
       - run: git fetch --tags
       - run:
@@ -93,25 +92,15 @@ jobs:
           at: ~/repo
       # do the actual release to PyPi
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
-      - run: ls -l
-      - run: cat workspace/bash.env
       - run: cat workspace/bash.env >> $BASH_ENV
-      - run:
-          command: |
-            echo scope is $RELEASE_SCOPE
-            echo $NEW_PACKAGE_VERSION
-            TEST=hoi
-            echo $TEST
-      - run: echo in release new version is $NEW_PACKAGE_VERSION
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
- #     - run:
- #         name: message slack about the release
- #         command: |
- #           curl -d "token=${SLACK_TOKEN}" \
- #           -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
- #           -d "channel=C01TN8FU480" \
- #           -X POST https://slack.com/api/chat.postMessage
-
+ ##     - run:
+  #        name: message slack about the release
+  #        command: |
+  #          curl -d "token=${SLACK_TOKEN}" \
+  ##          -d "text=TEST-TEST-TEST-molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
+   #         -d "channel=C01TN8FU480" \
+   #         -X POST https://slack.com/api/chat.postMessage
 
 workflows:
   build_and_test:
