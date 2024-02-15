@@ -92,6 +92,10 @@ jobs:
       # do the actual release to PyPi
       # - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
       - run: cat bash.env >> $BASH_ENV
+      - run:
+          command: |
+            TEST=$NEW_PACKAGE_VERSION
+            echo $TEST
       - run: echo in release new version is $NEW_PACKAGE_VERSION
       - run: tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
  #     - run:
