@@ -63,11 +63,11 @@ jobs:
           name: Bump the version based on the last tag and create a new tag
           command: |
             echo 'export RELEASE_SCOPE=<< pipeline.parameters.release_scope >>' >> "$BASH_ENV"
-            echo release_scope is ${RELEASE_SCOPE}
+            echo release_scope is "$RELEASE_SCOPE"
             pip install bumpversion
             NEW_PACKAGE_VERSION=$(bash bump-version.sh)
             echo 'export NEW_PACKAGE_VERSION' >> "$BASH_ENV"
-            echo "\n new version is" $NEW_PACKAGE_VERSION
+            echo '\n new version is ${NEW_PACKAGE_VERSION}'
       - run: git checkout .
       - run: # build and publish the release
           command: |
@@ -77,6 +77,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
+            -  .
             - bash.env
           # Voor testen even --skip-existing toegevoegd
           # push the new tag to molgenis/molgenis-py-bbmri-eric
