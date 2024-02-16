@@ -1,0 +1,130 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/configuration-reference
+version: 2.1
+
+parameters:
+  release:
+    type: boolean
+    default: false
+  release_scope:
+    type: string
+    default: chore
+
+executors:
+  my-executor:
+    docker:
+      - image: cimg/python:3.10
+    working_directory: ~/repo
+
+jobs:
+  run_tests:
+    executor: my-executor
+    steps:
+      - checkout
+      - run:
+          name: Run tests
+          command: |
+            pip install tox
+            tox
+      - run:
+          name: Install and run pre-commit
+          command: |
+            pip install pre-commit
+            pre-commit install
+            pre-commit run --all-files
+      - run:
+          name: sonar
+          command: |
+            if [ -n "$CIRCLE_PULL_REQUEST" ]; then
+              echo "SONAR FOR PR"
+            else
+              echo "SONAR FOR MAIN"
+            fi
+          # Actual sonar-scanner still needs to be implemented:
+          # "sonar-scanner -Dsonar.github.oauth=${env.GITHUB_TOKEN} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${env.CHANGE_ID} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=molgenis/molgenis-py-bbmri-eric"
+            # for main:
+          # "sonar-scanner"
+  release2testpypi:
+    executor: my-executor
+    steps:
+      - checkout
+      - run: pip install tox
+      - run:
+          # Could be replaced by adding a public/private ssh key
+          name: Setup git config
+          command: |
+            git config user.email "d.t.roelofs-prins@umcg.nl"
+            git config user.name "dtroelofsprins"
+ #   Seems not necessary used in Jenkins file  - run: git remote set-url origin https://${GITHUB_TOKEN}@github.com/molgenis/molgenis-py-bbmri-eric.git
+      - run: git checkout -f main
+      - run: git fetch --tags
+      - run:
+          name: Bump the version based on the last tag and create a new tag
+          command: |
+            echo 'export RELEASE_SCOPE=<< pipeline.parameters.release_scope >>' >> "$BASH_ENV"
+            pip install bumpversion
+            NEW_PACKAGE_VERSION=$(bash bump-version.sh)
+            echo "export NEW_PACKAGE_VERSION=$NEW_PACKAGE_VERSION" >> "$BASH_ENV"
+            echo New Package version is $NEW_PACKAGE_VERSION
+      - run: git checkout .
+      - run:
+          name: Build and publish the release to testpypi
+          command: |
+            tox -e build
+            tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
+      - run: git push --tags origin main
+      - run: cp $BASH_ENV bash.env
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            -  .
+  release2pypi:
+    executor: my-executor
+    steps:
+      - checkout
+      - run: pip install tox
+      - attach_workspace:
+          at: ~/repo
+      - run: tox -e publish -- --skip-existing --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
+      - run: cat bash.env >> $BASH_ENV
+      - run:
+          name: Message slack about the release
+          command: |
+            curl -d "token=${SLACK_TOKEN}" \
+            -d "text=molgenis-py-bbmri-eric ${NEW_PACKAGE_VERSION} is released. Check it out: https://pypi.org/project/molgenis-py-bbmri-eric/" \
+            -d "channel=C013UDLKFEW" \
+            -X POST https://slack.com/api/chat.postMessage
+
+workflows:
+  build_and_test:
+    when:
+      and:
+        - not: << pipeline.parameters.release >>
+    jobs:
+      - run_tests
+  release:
+    when: << pipeline.parameters.release >>
+    jobs:
+      - run_tests
+      - release2testpypi:
+          requires:
+            - run_tests
+          filters:
+            branches:
+              only: main
+      - release2pypi?:
+          type: approval
+          requires:
+            - run_tests
+            - release2testpypi
+          filters:
+            branches:
+              only: main
+      - release2pypi:
+          requires:
+            - run_tests
+            - release2testpypi
+            - release2pypi?
+          filters:
+            branches:
+              only: main
