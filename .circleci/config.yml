@@ -71,10 +71,8 @@ jobs:
           name: Build and publish the release to testpypi
           command: |
             tox -e build
-            tox -e publish -- --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
-          # Voor testen --skip-existing toegevoegd
-          # Met PR werkt pushen van tags niet, even afwachten of met main goed gaat
-#      - run: git push --tags origin main
+            tox -e publish -- --skip-existing --repository testpypi --username ${TESTPYPI_USERNAME} --password ${TESTPYPI_TOKEN}
+      - run: git push --tags origin main
       - run: cp $BASH_ENV bash.env
       - persist_to_workspace:
           root: ~/repo
@@ -87,7 +85,7 @@ jobs:
       - run: pip install tox
       - attach_workspace:
           at: ~/repo
-      - run: tox -e publish -- --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
+      - run: tox -e publish -- --skip-existing --repository pypi --username ${PYPI_USERNAME} --password ${PYPI_TOKEN}
       - run: cat bash.env >> $BASH_ENV
       - run:
           name: Message slack about the release
