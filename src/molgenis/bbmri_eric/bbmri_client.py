@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from enum import Enum
@@ -204,6 +205,7 @@ class EricSession(Session):
                         description=node["description"],
                         date_end=node.get("date_end"),
                         url=node["dns"],
+                        token=os.getenv(f"{node['id']}_user"),
                     )
                 )
         return result
@@ -315,8 +317,8 @@ class ExternalServerSession(Session):
     A session with a national node's external server (for example BBMRI-NL).
     """
 
-    def __init__(self, node: ExternalServerNode, *args, **kwargs):
-        super().__init__(url=node.url, *args, **kwargs)
+    def __init__(self, node: ExternalServerNode):
+        super().__init__(url=node.url, token=node.token)
         self.node = node
 
     def get_node_data(self) -> NodeData:
@@ -328,7 +330,7 @@ class ExternalServerSession(Session):
 
         tables = dict()
         for table_type in TableType.get_import_order():
-            id_ = table_type.base_id
+            id_ = self.node.get_staging_id(table_type)
             if not self.get("sys_md_EntityType", q=f"id=={id_}"):
                 tables[table_type.value] = Table.of_placeholder(table_type)
             else:

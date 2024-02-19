@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
-from molgenis.bbmri_eric.errors import EricWarning
+from molgenis.bbmri_eric.errors import EricError, EricWarning
 from molgenis.bbmri_eric.model import ExternalServerNode, NodeData
 from molgenis.bbmri_eric.printer import Printer
 from molgenis.bbmri_eric.stager import Stager
@@ -44,12 +44,29 @@ def test_get_source_data(external_server_init):
     assert source_data == node_data
 
 
-def test_check_tables(external_server_init):
-    node = ExternalServerNode("NL", "Netherlands", url="url.nl")
+def test_check_permissions(external_server_init):
+    node = ExternalServerNode("NL", "Netherlands", url="url.nl", token="stager_token")
     session = external_server_init.return_value
     session.get.return_value = []
     session.node = node
     stager = Stager(MagicMock(), Printer())
+
+    with pytest.raises(EricError) as e:
+        stager.stage(node)
+
+    assert str(e.value) == (
+        "The session user has invalid permissions\n       "
+        "Please check the token and permissions of this user"
+    )
+
+
+def test_check_tables(external_server_init):
+    node = ExternalServerNode("NL", "Netherlands", url="url.nl", token="stager_token")
+    session = external_server_init.return_value
+    session.get.return_value = []
+    session.node = node
+    stager = Stager(MagicMock(), Printer())
+    stager._check_permissions = MagicMock()
 
     warnings = stager.stage(node)
 

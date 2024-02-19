@@ -219,7 +219,7 @@ class Node:
     @classmethod
     def get_eu_id_prefix(cls, table_type: TableType) -> str:
         """
-        Some nodes can refer to rows in the EU node. These rows have an EU prefix and
+        Some nodes can refer to rows in the EU node. These rows have an EU prefix, and
         it's based on the classifier of the table.
 
         :param TableType table_type: the table to get the EU id prefix for
@@ -247,6 +247,7 @@ class ExternalServerNode(Node):
     """Represents a node that has an external server on which its data is hosted."""
 
     url: str | None = None
+    token: str | None = None
 
 
 class Source(Enum):

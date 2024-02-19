@@ -3,17 +3,20 @@ Example usage file meant for development. Make sure you have an .env file and a
 pyhandle_creds.json file in this folder.
 """
 
-from dotenv import dotenv_values
+import os
+
+from dotenv import load_dotenv
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.eric import Eric
 from molgenis.bbmri_eric.pid_service import PidService
 
 # Get credentials from .env
-config = dotenv_values(".env")
-target = config["TARGET"]
-username = config["USERNAME"]
-password = config["PASSWORD"]
+load_dotenv()
+
+target = os.getenv("TARGET")
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
 
 # Login to the directory with an EricSession
 session = EricSession(url=target)
