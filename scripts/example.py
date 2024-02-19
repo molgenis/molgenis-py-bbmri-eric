@@ -23,6 +23,8 @@ session = EricSession(url=target)
 session.login(username, password)
 
 # Get the nodes you want to work with
+# When staging a node the .env file should include a "node"_user="token" with view
+# permissions on the external staging area
 nodes_to_stage = session.get_external_nodes(["NL", "BE"])
 nodes_to_publish = session.get_nodes(["CY"])
 
