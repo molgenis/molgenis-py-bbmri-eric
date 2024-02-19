@@ -137,7 +137,7 @@ class PidManagerFactory:
 
     @staticmethod
     def create(pid_service: BasePidService, printer: Printer) -> BasePidManager:
-        if type(pid_service) == NoOpPidService:
+        if type(pid_service) is NoOpPidService:
             return NoOpPidManager()
         else:
             return PidManager(pid_service, printer)

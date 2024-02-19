@@ -3,23 +3,28 @@ Example usage file meant for development. Make sure you have an .env file and a
 pyhandle_creds.json file in this folder.
 """
 
-from dotenv import dotenv_values
+import os
+
+from dotenv import load_dotenv
 
 from molgenis.bbmri_eric.bbmri_client import EricSession
 from molgenis.bbmri_eric.eric import Eric
 from molgenis.bbmri_eric.pid_service import PidService
 
 # Get credentials from .env
-config = dotenv_values(".env")
-target = config["TARGET"]
-username = config["USERNAME"]
-password = config["PASSWORD"]
+load_dotenv()
+
+target = os.getenv("TARGET")
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
 
 # Login to the directory with an EricSession
 session = EricSession(url=target)
 session.login(username, password)
 
 # Get the nodes you want to work with
+# When staging a node the .env file should include a "node"_user="token" with view
+# permissions on the external staging area
 nodes_to_stage = session.get_external_nodes(["NL", "BE"])
 nodes_to_publish = session.get_nodes(["CY"])
 
