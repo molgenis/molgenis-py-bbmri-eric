@@ -49,12 +49,12 @@ jobs:
     steps:
       - checkout
       - run: pip install tox
-      - run:
-          # Could be replaced by adding a public/private ssh key
-          name: Setup git config
-          command: |
-            git config user.email "d.t.roelofs-prins@umcg.nl"
-            git config user.name "dtroelofsprins"
+#      - run:
+#          # Could be replaced by adding a public/private ssh key
+#          name: Setup git config
+#          command: |
+#            git config user.email "d.t.roelofs-prins@umcg.nl"
+#            git config user.name "dtroelofsprins"
       - run: git remote set-url origin https://${GITHUB_TOKEN}@github.com/molgenis/molgenis-py-bbmri-eric.git
       - run: git checkout -f main
       - run: git fetch --tags
