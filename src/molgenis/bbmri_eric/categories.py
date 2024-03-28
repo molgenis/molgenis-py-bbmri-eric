@@ -56,26 +56,20 @@ AUTOIMMUNE_TERMS = {
 CARDIOVASCULAR_TERMS = {
     # "I00-I99"
     "urn:miriam:icd:IX",
-    # "urn:miriam:icd:I00-I02",
-    # "urn:miriam:icd:I05-I09",
-    # "urn:miriam:icd:I10-I15",
-    # "urn:miriam:icd:I20-I25",
-    # "urn:miriam:icd:I26-I28",
-    # "urn:miriam:icd:I30-I52",
-    # "urn:miriam:icd:I60-I69",
-    # "urn:miriam:icd:I70-I79",
-    # "urn:miriam:icd:I80-I89",
-    # "urn:miriam:icd:I95-I99",
 }
 
 COVID_TERMS = {
-    "urn:miriam:icd:U09",
-    "urn:miriam:icd:U08",
-    "urn:miriam:icd:U11",
-    "urn:miriam:icd:U10",
-    "urn:miriam:icd:U12",
     "urn:miriam:icd:U07.1",
     "urn:miriam:icd:U07.2",
+    "urn:miriam:icd:U08",
+    "urn:miriam:icd:U09",
+    "urn:miriam:icd:U09.9",
+    "urn:miriam:icd:U10",
+    "urn:miriam:icd:U10.9",
+    "urn:miriam:icd:U11",
+    "urn:miriam:icd:U11.9",
+    "urn:miriam:icd:U12",
+    "urn:miriam:icd:U12.9",
 }
 
 INFECTIOUS_TERMS = {
