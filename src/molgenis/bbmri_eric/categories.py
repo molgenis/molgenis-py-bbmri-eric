@@ -50,7 +50,7 @@ AUTOIMMUNE_TERMS = {
     "urn:miriam:icd:M06",
     "urn:miriam:icd:M35.9",
     "urn:miriam:icd:M45",
-    # "urn:miriam:icd:K5190"
+    "urn:miriam:icd:K75",
 }
 
 CARDIOVASCULAR_TERMS = {
@@ -116,11 +116,7 @@ NERVOUS_SYSTEM_TERMS = {
 
 ONCOLOGY_TERMS = {
     # "urn:miriam:icd:C00-D49",
-    # "urn:miriam:icd:II",
-    "urn:miriam:icd:C00-C97",
-    "urn:miriam:icd:D00-D09",
-    # "urn:miriam:icd:D10-D36",
-    "urn:miriam:icd:D37-D48",
+    "urn:miriam:icd:II",
 }
 
 PAEDIATRIC_AGE_LIMIT = {
