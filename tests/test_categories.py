@@ -20,10 +20,10 @@ def disease_ontology() -> OntologyTable:
         meta,
         [
             {"id": "urn:miriam:icd:T18.5"},
-            {"id": "urn:miriam:icd:C00-C97", "ontology": "ICD-10"},
+            {"id": "urn:miriam:icd:II", "ontology": "ICD-10"},
             {
                 "id": "urn:miriam:icd:C97",
-                "parentId": "urn:miriam:icd:C00-C97",
+                "parentId": "urn:miriam:icd:II",
                 "ontology": "ICD-10",
                 "exact_mapping": ["ORPHA:93969"],
             },
