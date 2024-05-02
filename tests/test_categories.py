@@ -20,10 +20,10 @@ def disease_ontology() -> OntologyTable:
         meta,
         [
             {"id": "urn:miriam:icd:T18.5"},
-            {"id": "urn:miriam:icd:C00-C97", "ontology": "ICD-10"},
+            {"id": "urn:miriam:icd:II", "ontology": "ICD-10"},
             {
                 "id": "urn:miriam:icd:C97",
-                "parentId": "urn:miriam:icd:C00-C97",
+                "parentId": "urn:miriam:icd:II",
                 "ontology": "ICD-10",
                 "exact_mapping": ["ORPHA:93969"],
             },
@@ -33,6 +33,28 @@ def disease_ontology() -> OntologyTable:
                 "parentId": "urn:miriam:icd:U09",
                 "ntbt_mapping": ["ORPHA:93969"],
             },
+            {
+                "id": "urn:miriam:icd:D69.6",
+                "parentId": "urn:miriam:icd:D69",
+            },
+            {
+                "id": "urn:miriam:icd:D69",
+                "parentId": "urn:miriam:icd:D65-D69",
+            },
+            {"id": "urn:miriam:icd:I05-I09", "parentId": "urn:miriam:icd:IX"},
+            {"id": "urn:miriam:icd:IX"},
+            {"id": "urn:miriam:icd:U07.1"},
+            {"id": "urn:miriam:icd:I05", "parentId": "urn:miriam:icd:I05-I09"},
+            {
+                "id": "urn:miriam:icd:D65-D69",
+            },
+            {"id": "urn:miriam:icd:E43", "parentId": "urn:miriam:icd:E40-E46"},
+            {"id": "urn:miriam:icd:E40-E46"},
+            {"id": "urn:miriam:icd:G32", "parentId": "urn:miriam:icd:G30-G32"},
+            {"id": "urn:miriam:icd:G30-G32", "parentId": "urn:miriam:icd:VI"},
+            {"id": "urn:miriam:icd:VI"},
+            {"id": "urn:miriam:icd:Z00.5", "parentId": "urn:miriam:icd:Z00"},
+            {"id": "urn:miriam:icd:Z00"},
             {"id": "ORPHA:93969", "ontology": "orphanet"},
         ],
         "parentId",
@@ -76,11 +98,14 @@ def test_map_paediatric(mapper, collection: dict, expected: List[str]):
         ({"diagnosis_available": ["ORPHA:93969"]}, [Category.RARE_DISEASE.value]),
         (
             {"diagnosis_available": ["urn:miriam:icd:C97"]},
-            [Category.RARE_DISEASE.value, Category.CANCER.value],
+            [Category.ONCOLOGY.value, Category.RARE_DISEASE.value],
         ),
         (
             {"diagnosis_available": ["urn:miriam:icd:U09.9"]},
-            [Category.RARE_DISEASE.value, Category.COVID19.value],
+            [
+                Category.COVID19.value,
+                Category.RARE_DISEASE.value,
+            ],
         ),
         (
             {
@@ -90,7 +115,31 @@ def test_map_paediatric(mapper, collection: dict, expected: List[str]):
                     "ORPHA:93969",
                 ]
             },
-            [Category.RARE_DISEASE.value, Category.COVID19.value],
+            [
+                Category.COVID19.value,
+                Category.RARE_DISEASE.value,
+            ],
+        ),
+        (
+            {"diagnosis_available": ["urn:miriam:icd:D69.6"]},
+            [Category.AUTOIMMUNE.value],
+        ),
+        (
+            {"diagnosis_available": ["urn:miriam:icd:I05"]},
+            [Category.CARDIOVASCULAR.value],
+        ),
+        (
+            {"diagnosis_available": ["urn:miriam:icd:U07.1"]},
+            [Category.COVID19.value, Category.INFECTIOUS.value],
+        ),
+        ({"diagnosis_available": ["urn:miriam:icd:E43"]}, [Category.METABOLIC.value]),
+        (
+            {"diagnosis_available": ["urn:miriam:icd:G32"]},
+            [Category.NERVOUS_SYSTEM.value],
+        ),
+        (
+            {"diagnosis_available": ["urn:miriam:icd:Z00.5"]},
+            [Category.POPULATION.value],
         ),
     ],
 )
@@ -107,6 +156,8 @@ def test_map_diseases(mapper, disease_ontology, collection: dict, expected: List
         (dict(), []),
         ({"type": ["DISEASE_SPECIFIC"]}, []),
         ({"type": ["RD"]}, [Category.RARE_DISEASE.value]),
+        ({"type": ["BIRTH_COHORT"]}, [Category.PAEDIATRIC.value]),
+        ({"type": ["CASE_CONTROL", "POPULATION_BASED"]}, [Category.POPULATION.value]),
     ],
 )
 def test_map_collection_types(mapper, collection: dict, expected: List[str]):

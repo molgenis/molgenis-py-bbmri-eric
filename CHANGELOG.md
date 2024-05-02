@@ -1,5 +1,6 @@
 # Changelog
 ## Version 1.18.0 (development)
+- Derivation of new categories
 
 ## Version 1.17.0
 - Get staging data instead of published data from the external servers

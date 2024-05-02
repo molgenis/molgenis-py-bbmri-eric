@@ -11,11 +11,17 @@ class Category(Enum):
     eu_bbmri_eric_category table.
     """
 
+    AUTOIMMUNE = "autoimmune"
+    CARDIOVASCULAR = "cardiovascular"
+    COVID19 = "covid19"
+    INFECTIOUS = "infectious"
+    METABOLIC = "metabolic"
+    NERVOUS_SYSTEM = "nervous_system"
+    ONCOLOGY = "oncology"
     PAEDIATRIC = "paediatric_only"
     PAEDIATRIC_INCLUDED = "paediatric_included"
+    POPULATION = "population"
     RARE_DISEASE = "rare_disease"
-    COVID19 = "covid19"
-    CANCER = "cancer"
 
 
 class AgeUnit(Enum):
@@ -29,6 +35,90 @@ class AgeUnit(Enum):
     YEAR = "YEAR"
 
 
+AUTOIMMUNE_TERMS = {
+    "urn:miriam:icd:B20",
+    # "D50-D89",
+    "urn:miriam:icd:D50-D53",
+    "urn:miriam:icd:D55-D59",
+    "urn:miriam:icd:D60-D64",
+    "urn:miriam:icd:D65-D69",
+    "urn:miriam:icd:D70-D77",
+    # "urn:miriam:icd:D71",
+    "urn:miriam:icd:D80-D89",
+    "urn:miriam:icd:E06.3",
+    "urn:miriam:icd:K90.0",
+    "urn:miriam:icd:M06",
+    "urn:miriam:icd:M35.9",
+    "urn:miriam:icd:M45",
+    "urn:miriam:icd:K75",
+}
+
+CARDIOVASCULAR_TERMS = {
+    # "I00-I99"
+    "urn:miriam:icd:IX",
+}
+
+COVID_TERMS = {
+    "urn:miriam:icd:U07.1",
+    "urn:miriam:icd:U07.2",
+    "urn:miriam:icd:U08",
+    "urn:miriam:icd:U09",
+    "urn:miriam:icd:U09.9",
+    "urn:miriam:icd:U10",
+    "urn:miriam:icd:U10.9",
+    "urn:miriam:icd:U11",
+    "urn:miriam:icd:U11.9",
+    "urn:miriam:icd:U12",
+    "urn:miriam:icd:U12.9",
+}
+
+INFECTIOUS_TERMS = {
+    # A00-B99;
+    "urn:miriam:icd:I",
+    "urn:miriam:icd:J09-J18",
+    "urn:miriam:icd:U07.1",
+}
+
+METABOLIC_TERMS = {
+    # E00-E89
+    # if E90 can be included: "urn:miriam:icd:IV",
+    "urn:miriam:icd:E00-E07",
+    "urn:miriam:icd:E10-E14",
+    "urn:miriam:icd:E15-E16",
+    "urn:miriam:icd:E20-E35",
+    "urn:miriam:icd:E40-E46",
+    "urn:miriam:icd:E50-E64",
+    "urn:miriam:icd:E65-E68",
+    "urn:miriam:icd:E70",
+    "urn:miriam:icd:E71",
+    "urn:miriam:icd:E72",
+    "urn:miriam:icd:E73",
+    "urn:miriam:icd:E74",
+    "urn:miriam:icd:E75",
+    "urn:miriam:icd:E76",
+    "urn:miriam:icd:E77",
+    "urn:miriam:icd:E78",
+    "urn:miriam:icd:E79",
+    "urn:miriam:icd:E80",
+    "urn:miriam:icd:E83",
+    "urn:miriam:icd:E84",
+    "urn:miriam:icd:E85",
+    "urn:miriam:icd:E86",
+    "urn:miriam:icd:E87",
+    "urn:miriam:icd:E88",
+    "urn:miriam:icd:E89",
+}
+
+NERVOUS_SYSTEM_TERMS = {
+    # G00-G99
+    "urn:miriam:icd:VI",
+}
+
+ONCOLOGY_TERMS = {
+    # "urn:miriam:icd:C00-D49",
+    "urn:miriam:icd:II",
+}
+
 PAEDIATRIC_AGE_LIMIT = {
     AgeUnit.DAY: 365 * 18,
     AgeUnit.WEEK: 52 * 18,
@@ -36,20 +126,8 @@ PAEDIATRIC_AGE_LIMIT = {
     AgeUnit.YEAR: 18,
 }
 
-CANCER_TERMS = {
-    "urn:miriam:icd:C00-C97",
-    "urn:miriam:icd:D00-D09",
-    "urn:miriam:icd:D37-D48",
-}
-
-COVID_TERMS = {
-    "urn:miriam:icd:U09",
-    "urn:miriam:icd:U08",
-    "urn:miriam:icd:U11",
-    "urn:miriam:icd:U10",
-    "urn:miriam:icd:U12",
-    "urn:miriam:icd:U07.1",
-    "urn:miriam:icd:U07.2",
+POPULATION_TERMS = {
+    "urn:miriam:icd:Z00",
 }
 
 
@@ -96,6 +174,12 @@ class CategoryMapper:
     def _map_collection_types(cls, collection: dict, categories: List[str]):
         if "RD" in collection.get("type", []):
             categories.append(Category.RARE_DISEASE.value)
+        if "BIRTH_COHORT" in collection.get("type", []):
+            categories.append(Category.PAEDIATRIC.value)
+        if "CASE_CONTROL" in collection.get(
+            "type", []
+        ) or "POPULATION_BASED" in collection.get("type", []):
+            categories.append(Category.POPULATION.value)
 
     def _map_diseases(self, collection: dict, categories: List[str]):
         diagnoses = deepcopy(collection.get("diagnosis_available", []))
@@ -105,14 +189,32 @@ class CategoryMapper:
                 diagnoses.extend(matching_diagnoses)
                 diagnoses = set(diagnoses)
 
-            if self._contains_orphanet(diagnoses):
-                categories.append(Category.RARE_DISEASE.value)
+            if self._contains_descendant_of(diagnoses, AUTOIMMUNE_TERMS):
+                categories.append(Category.AUTOIMMUNE.value)
 
-            if self._contains_descendant_of(diagnoses, CANCER_TERMS):
-                categories.append(Category.CANCER.value)
+            if self._contains_descendant_of(diagnoses, CARDIOVASCULAR_TERMS):
+                categories.append(Category.CARDIOVASCULAR.value)
 
             if self._contains_descendant_of(diagnoses, COVID_TERMS):
                 categories.append(Category.COVID19.value)
+
+            if self._contains_descendant_of(diagnoses, INFECTIOUS_TERMS):
+                categories.append(Category.INFECTIOUS.value)
+
+            if self._contains_descendant_of(diagnoses, METABOLIC_TERMS):
+                categories.append(Category.METABOLIC.value)
+
+            if self._contains_descendant_of(diagnoses, NERVOUS_SYSTEM_TERMS):
+                categories.append(Category.NERVOUS_SYSTEM.value)
+
+            if self._contains_descendant_of(diagnoses, ONCOLOGY_TERMS):
+                categories.append(Category.ONCOLOGY.value)
+
+            if self._contains_descendant_of(diagnoses, POPULATION_TERMS):
+                categories.append(Category.POPULATION.value)
+
+            if self._contains_orphanet(diagnoses):
+                categories.append(Category.RARE_DISEASE.value)
 
     def _contains_orphanet(self, diagnoses: List[str]) -> bool:
         for diagnosis in diagnoses:
