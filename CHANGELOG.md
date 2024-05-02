@@ -1,5 +1,7 @@
 # Changelog
-## Version 1.18.0 (development)
+## Version 1.19.0 (development)
+
+## Version 1.18.0
 - Derivation of new categories
 
 ## Version 1.17.0
