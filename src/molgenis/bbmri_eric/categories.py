@@ -18,8 +18,9 @@ class Category(Enum):
     METABOLIC = "metabolic"
     NERVOUS_SYSTEM = "nervous_system"
     ONCOLOGY = "oncology"
-    PAEDIATRIC = "paediatric_only"
-    PAEDIATRIC_INCLUDED = "paediatric_included"
+    PAEDIATRICS = "paediatrics"
+    #    PAEDIATRIC = "paediatric_only"
+    #    PAEDIATRIC_INCLUDED = "paediatric_included"
     POPULATION = "population"
     RARE_DISEASE = "rare_disease"
 
@@ -54,7 +55,6 @@ AUTOIMMUNE_TERMS = {
 }
 
 CARDIOVASCULAR_TERMS = {
-    # "I00-I99"
     "urn:miriam:icd:IX",
 }
 
@@ -73,10 +73,19 @@ COVID_TERMS = {
 }
 
 INFECTIOUS_TERMS = {
-    # A00-B99;
     "urn:miriam:icd:I",
     "urn:miriam:icd:J09-J18",
     "urn:miriam:icd:U07.1",
+    "urn:miriam:icd:U07.2",
+    "urn:miriam:icd:U08",
+    "urn:miriam:icd:U09",
+    "urn:miriam:icd:U09.9",
+    "urn:miriam:icd:U10",
+    "urn:miriam:icd:U10.9",
+    "urn:miriam:icd:U11",
+    "urn:miriam:icd:U11.9",
+    "urn:miriam:icd:U12",
+    "urn:miriam:icd:U12.9",
 }
 
 METABOLIC_TERMS = {
@@ -166,16 +175,17 @@ class CategoryMapper:
 
             age_limit = PAEDIATRIC_AGE_LIMIT[AgeUnit[unit]]
             if high is not None and (high < age_limit):
-                categories.append(Category.PAEDIATRIC.value)
-            elif low is not None and (low < age_limit):
-                categories.append(Category.PAEDIATRIC_INCLUDED.value)
+                categories.append(Category.PAEDIATRICS.value)
+            if low is not None and (low < age_limit):
+                # categories.append(Category.PAEDIATRIC_INCLUDED.value)
+                categories.append(Category.PAEDIATRICS.value)
 
     @classmethod
     def _map_collection_types(cls, collection: dict, categories: List[str]):
         if "RD" in collection.get("type", []):
             categories.append(Category.RARE_DISEASE.value)
         if "BIRTH_COHORT" in collection.get("type", []):
-            categories.append(Category.PAEDIATRIC.value)
+            categories.append(Category.PAEDIATRICS.value)
         if "CASE_CONTROL" in collection.get(
             "type", []
         ) or "POPULATION_BASED" in collection.get("type", []):
