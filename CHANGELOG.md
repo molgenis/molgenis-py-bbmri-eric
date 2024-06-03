@@ -1,6 +1,9 @@
 # Changelog
 ## Version 1.19.0 (development)
 
+## Version 1.18.1
+- Paediatric categories are combined and infectious now includes covid19
+
 ## Version 1.18.0
 - Derivation of new categories
 
